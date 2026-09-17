@@ -1,32 +1,64 @@
-# React + TypeScript + Vite
+# EpiGimp
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A simple image editor inspired by GIMP, built as a desktop app with **Electron**, **React** and **TypeScript**.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [Node.js](https://nodejs.org/) **20.19+** or **22.12+**
+- npm (comes with Node.js)
 
-## React Compiler
+Check your version with:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+node -v
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Install
+
+```bash
+git clone <repository-url>
+cd EpiGimp
+npm install
+```
+
+## Run the app
+
+```bash
+npm run dev
+```
+
+This opens the EpiGimp window. When you save a file in `src/ui/`, the window updates by itself.
+
+> The dev server uses port **5123**. If the app does not start, make sure nothing else is using that port.
+
+## Build the app
+
+To create an installable version of the app, run the command for your system:
+
+| System  | Command              | Result              |
+| ------- | -------------------- | ------------------- |
+| Linux   | `npm run dist:linux` | `.AppImage`         |
+| Windows | `npm run dist:win`   | `.exe` and `.msi`   |
+| macOS   | `npm run dist:mac`   | `.dmg` (Apple chip) |
+
+The files are created in the `dist/` folder.
+
+## Other commands
+
+| Command        | What it does                        |
+| -------------- | ----------------------------------- |
+| `npm run lint` | Checks the code for common mistakes |
+
+## Project structure
+
+```
+EpiGimp/
+├── index.html         # Page loaded by the app (you don't need to edit it)
+├── src/
+│   ├── electron/      # Desktop window code (Electron)
+│   ├── ui/            # The app interface (React)
+│   │   ├── main.tsx   # Starts React
+│   │   └── App.tsx    # Main layout of the app
+│   └── img/           # App icon
+└── Docs/              # Project subject
+```
