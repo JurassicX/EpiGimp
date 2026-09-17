@@ -9,7 +9,9 @@ function App() {
       <div className="app">
         <header className="topbar">File Edit Image Filters</header>
         <aside className="left-panel">Tools</aside>
-        <main className="canvas-area">Canvas</main>
+        <main className="canvas-area">
+          <canvas className="checkerboard" width={800} height={600} />
+        </main>
         <aside className="right-panel">Layers</aside>
       </div>
     </>

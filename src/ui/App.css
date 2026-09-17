@@ -9,5 +9,18 @@
 }
 .topbar { grid-area: top; border-bottom: 1px solid var(--border); }
 .left-panel { grid-area: left; border-right: 1px solid var(--border); }
-.canvas-area { grid-area: canvas; overflow: auto; }
+.canvas-area {
+  grid-area: canvas;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  background: #2b2b2b;
+}
 .right-panel {grid-area: right; border-left: 1px solid var(--border); }
+
+.checkerboard {
+  --check-size: 16px;
+  background-color: #cccccc;
+  background-image: conic-gradient(#999999 25%, transparent 0 50%, #999999 0 75%, transparent 0);
+  background-size: calc(var(--check-size) * 2) calc(var(--check-size) * 2);
+}
