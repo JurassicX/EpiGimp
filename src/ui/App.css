@@ -24,3 +24,29 @@
   background-image: conic-gradient(#999999 25%, transparent 0 50%, #999999 0 75%, transparent 0);
   background-size: calc(var(--check-size) * 2) calc(var(--check-size) * 2);
 }
+
+.editor {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+.toolbar {
+  width: 250px;
+  background-color: #eeeeee;
+}
+
+.toolbar-item {
+  padding: 15px;
+}
+
+.tool-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.tool-input {
+  width: 75%;
+}
