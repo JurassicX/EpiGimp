@@ -1,0 +1,14 @@
+.slider {
+  padding: 15px;
+}
+
+.slider-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.slider-input {
+  width: 75%;
+}

@@ -1,46 +1,19 @@
-import { useState } from 'react'
+import { TopBar } from './panels/TopBar'
+import { ToolPanel } from './panels/ToolPanel'
+import { CanvasArea } from './panels/CanvasArea'
+import { LayersPanel } from './panels/LayersPanel'
+import { useImageFilters } from './hooks/useImageFilters'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+export function App() {
+  const { image, filters, setFilter, openFile } = useImageFilters()
 
   return (
-    <>
-      <div className="app">
-        <header className="topbar">File Edit Image Filters</header>
-        <aside className="left-panel">
-          tool
-          <div className="editor">
-            <div className="toolbar">
-              <div className="toolbar-item">
-                <input type="file" id="imageFileInput"></input>
-              </div>
-              <div className="toolbar-item">
-                <label className="tool-label" for="brightness">brightness</label>
-                <input className="tool-input" type="range" id="brightness" min="0" max="200"></input>
-              </div>
-              <div className="toolbar-item">
-                <label className="tool-label" for="saturation">saturation</label>
-                <input className="tool-input" type="range" id="saturation" min="0" max="200"></input>
-              </div>
-              <div className="toolbar-item">
-                <label className="tool-label" for="blur">blur</label>
-                <input className="tool-input" type="range" id="blur" min="0" max="25"></input>
-              </div>
-              <div className="toolbar-item">
-                <label className="tool-label" for="inversion">inversion</label>
-                <input className="tool-input" type="range" id="inversion" min="0" max="100"></input>
-              </div>
-            </div>
-          </div>
-        </aside>
-        <main className="canvas-area">
-          <canvas id="canvas" className="checkerboard" width={800} height={600} />
-        </main>
-        <aside className="right-panel">Layers</aside>
-      </div>
-    </>
+    <div className="app">
+      <TopBar />
+      <ToolPanel filters={filters} onFilterChange={setFilter} onOpenFile={openFile} />
+      <CanvasArea image={image} filters={filters} />
+      <LayersPanel />
+    </div>
   )
 }
-
-export default App
