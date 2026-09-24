@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { toCssFilter, type FilterSettings } from '../core/filters'
 import { addLayer, createDocument, type EpiDocument } from '../core/document'
 import { renderDocument } from '../core/renderer'
+import { getMousePos } from '../mouse/mouseEvent'
 import './CanvasArea.css'
 
 interface CanvasAreaProps {
@@ -33,6 +34,7 @@ function createTestDocument(): EpiDocument {
 export function CanvasArea({ image, filters }: CanvasAreaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const testDocument = useMemo(() => createTestDocument(), [])
+  const clickMaintained = useRef(false)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -53,9 +55,29 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
     ctx.drawImage(image, 0, 0)
   }, [image, filters, testDocument])
 
+  function handleMouseDown(ev: React.MouseEvent<HTMLCanvasElement>) {
+    if (clickMaintained.current) return
+    clickMaintained.current = true
+
+    const pos = getMousePos(ev.currentTarget, ev)
+    console.log('x:' + pos.x + ' y:' + pos.y)
+  }
+
+  function handleMouseUp() {
+    clickMaintained.current = false
+  }
+
   return (
     <main className="canvas-area">
-      <canvas ref={canvasRef} className="checkerboard" width={800} height={600} />
+      <canvas
+        ref={canvasRef}
+        className="checkerboard"
+        width={800}
+        height={600}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      />
     </main>
   )
 }
