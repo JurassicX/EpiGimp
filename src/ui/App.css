@@ -1,0 +1,21 @@
+.app {
+  display: grid;
+  grid-template-rows: 40px 1fr;
+  grid-template-columns: 220px 1fr 260px;
+  grid-template-areas:
+    "top top top"
+    "left canvas right";
+  height: 100vh;
+}
+
+.topbar { grid-area: top; border-bottom: 1px solid var(--border); }
+.left-panel { grid-area: left; border-right: 1px solid var(--border); }
+.right-panel { grid-area: right; border-left: 1px solid var(--border); }
+
+.canvas-area {
+  grid-area: canvas;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  background: #2b2b2b;
+}
