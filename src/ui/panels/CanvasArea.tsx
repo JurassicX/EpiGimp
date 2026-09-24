@@ -23,6 +23,10 @@ function createTestDocument(): EpiDocument {
   circle.ctx.fill()
   circle.opacity = 0.7
 
+  const rectangle = addLayer(doc, 'Green rectangle')
+  rectangle.ctx.fillStyle = '#3BB143'
+  rectangle.ctx.fillRect(0, 0, 500, 250)
+  rectangle.blendMode = 'screen'
   return doc
 }
 
