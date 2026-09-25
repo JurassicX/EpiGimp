@@ -4,7 +4,7 @@ import { addLayer, createDocument, type EpiDocument } from '../core/document'
 import { renderDocument } from '../core/renderer'
 import { getMousePos, type MousePos } from '../mouse/mouseEvent'
 import './CanvasArea.css'
-import { drawCircle } from '../brush/drawSquare'
+import { DEFAULT_BRUSH, drawCircle, drawStroke } from '../brush/drawSquare'
 
 interface CanvasAreaProps {
   image: HTMLImageElement | null
@@ -38,7 +38,7 @@ function createTestDocument(): EpiDocument {
 export function CanvasArea({ image, filters }: CanvasAreaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const testDocument = useMemo(() => createTestDocument(), [])
-  const clickMaintained = useRef(false)
+  const stroke = useRef<MousePos[] | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -60,7 +60,7 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
   }, [image, filters, testDocument])
 
   function paintAt(pos: MousePos) {
-    drawCircle(pos, testDocument)
+    drawCircle(pos, testDocument, DEFAULT_BRUSH)
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
@@ -68,23 +68,25 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
     renderDocument(ctx, testDocument)
   }
 
-  function handleMouseDown(ev: React.MouseEvent<HTMLCanvasElement>) {
+  function handlePointerDown(ev: React.PointerEvent<HTMLCanvasElement>) {
+    if (stroke.current) return
+
     const pos = getMousePos(ev.currentTarget, ev)
-
-    if (clickMaintained.current) return
-    clickMaintained.current = true
+    stroke.current = [pos]
     paintAt(pos)
-
-    console.log('x:' + pos.x + ' y:' + pos.y)
   }
 
-  function handleMouseMove(ev: React.MouseEvent<HTMLCanvasElement>) {
-    if (!clickMaintained.current) return
-    paintAt(getMousePos(ev.currentTarget, ev))
+  function handlePointerMove(ev: React.PointerEvent<HTMLCanvasElement>) {
+    if (!stroke.current) return
+
+    const pos = getMousePos(ev.currentTarget, ev)
+    drawStroke(stroke.current[stroke.current.length - 1], pos, testDocument, DEFAULT_BRUSH)
+    stroke.current.push(pos)
+    paintAt(pos)
   }
 
-  function handleMouseUp() {
-    clickMaintained.current = false
+  function handlePointerUp() {
+    stroke.current = null
   }
 
   return (
@@ -94,10 +96,10 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
         className="checkerboard"
         width={800}
         height={600}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onMouseMove={handleMouseMove}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
       />
     </main>
   )
