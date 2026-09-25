@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef } from 'react'
 import { toCssFilter, type FilterSettings } from '../core/filters'
 import { addLayer, createDocument, type EpiDocument } from '../core/document'
 import { renderDocument } from '../core/renderer'
-import { getMousePos } from '../mouse/mouseEvent'
+import { getMousePos, type MousePos } from '../mouse/mouseEvent'
 import './CanvasArea.css'
+import { drawCircle } from '../brush/drawSquare'
 
 interface CanvasAreaProps {
   image: HTMLImageElement | null
@@ -28,6 +29,9 @@ function createTestDocument(): EpiDocument {
   rectangle.ctx.fillStyle = '#3BB143'
   rectangle.ctx.fillRect(0, 0, 500, 250)
   rectangle.blendMode = 'screen'
+
+  const brush = addLayer(doc, 'Brush')
+  doc.activeLayerId = brush.id
   return doc
 }
 
@@ -55,12 +59,28 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
     ctx.drawImage(image, 0, 0)
   }, [image, filters, testDocument])
 
+  function paintAt(pos: MousePos) {
+    drawCircle(pos, testDocument)
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    renderDocument(ctx, testDocument)
+  }
+
   function handleMouseDown(ev: React.MouseEvent<HTMLCanvasElement>) {
+    const pos = getMousePos(ev.currentTarget, ev)
+
     if (clickMaintained.current) return
     clickMaintained.current = true
+    paintAt(pos)
 
-    const pos = getMousePos(ev.currentTarget, ev)
     console.log('x:' + pos.x + ' y:' + pos.y)
+  }
+
+  function handleMouseMove(ev: React.MouseEvent<HTMLCanvasElement>) {
+    if (!clickMaintained.current) return
+    paintAt(getMousePos(ev.currentTarget, ev))
   }
 
   function handleMouseUp() {
@@ -77,6 +97,7 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onMouseMove={handleMouseMove}
       />
     </main>
   )
