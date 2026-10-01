@@ -5,12 +5,14 @@ export interface BrushSettings {
     size: number
     hardness: number
     color: string
+    opacity: number
 }
 
 export const DEFAULT_BRUSH: BrushSettings = {
     size: 20,
     hardness: 1,
     color: '#e04040',
+    opacity: 1,
 }
 
 export function drawCircle(pos: MousePos, testDocument: EpiDocument, brush: BrushSettings) {
@@ -24,6 +26,7 @@ export function drawCircle(pos: MousePos, testDocument: EpiDocument, brush: Brus
     layer.ctx.beginPath()
     layer.ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2)
     layer.ctx.fill()
+    layer.ctx.globalAlpha = brush.opacity
     layer.ctx.filter = 'none'
 }
 

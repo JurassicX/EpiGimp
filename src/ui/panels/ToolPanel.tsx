@@ -1,3 +1,4 @@
+import { DEFAULT_BRUSH } from '../brush/drawSquare'
 import { Slider } from '../components/Slider'
 import type { FilterSettings } from '../core/filters'
 import './ToolPanel.css'
@@ -6,6 +7,18 @@ interface ToolPanelProps {
   filters: FilterSettings
   onFilterChange: (key: keyof FilterSettings, value: number) => void
   onOpenFile: (file: File) => void
+}
+
+function updateBrushSize(size: number) {
+  DEFAULT_BRUSH.size = size
+}
+
+function updateBrushOpaHardness(hardness: number) {
+  DEFAULT_BRUSH.hardness = hardness
+}
+
+function updateBrushOpacity(opacity: number) {
+  DEFAULT_BRUSH.opacity = opacity
 }
 
 export function ToolPanel({ filters, onFilterChange, onOpenFile }: ToolPanelProps) {
@@ -31,6 +44,17 @@ export function ToolPanel({ filters, onFilterChange, onOpenFile }: ToolPanelProp
                 value={filters.blur} onChange={(value) => onFilterChange('blur', value)} />
         <Slider id="inversion" label="inversion" min={0} max={100}
                 value={filters.inversion} onChange={(value) => onFilterChange('inversion', value)} />
+      </div>
+      <div>
+        <button>pinceau</button>
+        <button>gomme</button>
+        <div>size</div>
+        <input type="number" defaultValue={20} min={1} max={100} onChange={(event) => {updateBrushSize(Number(event.target.value))}}></input>
+        <div>hardness</div>
+        <input type="number" defaultValue={1} min={0} max={1} onChange={(event) => {updateBrushOpaHardness(Number(event.target.value))}} ></input>
+        <div>opacity</div>
+        <input type="number" defaultValue={1} min={0} max={1} onChange={(event) => {updateBrushOpacity(Number(event.target.value))}}></input>
+
       </div>
     </aside>
   )
