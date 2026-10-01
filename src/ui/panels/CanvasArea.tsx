@@ -5,6 +5,7 @@ import { renderDocument } from '../core/renderer'
 import { getMousePos, type MousePos } from '../mouse/mouseEvent'
 import './CanvasArea.css'
 import { DEFAULT_BRUSH, drawCircle, drawStroke } from '../brush/drawSquare'
+import { hexColor } from '../core/hexColor'
 
 interface CanvasAreaProps {
   image: HTMLImageElement | null
@@ -68,10 +69,26 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
     renderDocument(ctx, testDocument)
   }
 
+  function getColorFromCoord(pos: MousePos) {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const imageData = ctx.getImageData(pos.x, pos.y, 1, 1)
+    console.log(imageData.data)
+    DEFAULT_BRUSH.color = "#" + hexColor(imageData.data[0]) + hexColor(imageData.data[1]) + hexColor(imageData.data[2])
+    DEFAULT_BRUSH.brushType = "brush"
+  }
+
   function handlePointerDown(ev: React.PointerEvent<HTMLCanvasElement>) {
     if (stroke.current) return
 
     const pos = getMousePos(ev.currentTarget, ev)
+
+    if (DEFAULT_BRUSH.brushType === "eyedropper") {
+      getColorFromCoord(pos)
+      return
+    }
     stroke.current = [pos]
     paintAt(pos)
   }

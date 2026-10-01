@@ -52,6 +52,7 @@ export function ToolPanel({ filters, onFilterChange, onOpenFile }: ToolPanelProp
       <div>
         <button onClick={() => DEFAULT_BRUSH.brushType = "brush"}>pinceau</button>
         <button onClick={() => DEFAULT_BRUSH.brushType = "eraser"}>gomme</button>
+        <button onClick={() => DEFAULT_BRUSH.brushType = "eyedropper"}>pipette</button>
         <div>color</div>
         <input type="color" onChange={(event) => {updateBrushColor(event.target.value)}} ></input>
         <div>size</div>

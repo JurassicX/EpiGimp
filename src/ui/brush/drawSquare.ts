@@ -1,11 +1,12 @@
 import type { EpiDocument } from "../core/document";
 import type { MousePos } from "../mouse/mouseEvent";
 
-export type BrushType = "brush" | "eraser"
+export type BrushType = "brush" | "eraser" | "eyedropper"
 
 export const BRUSH_TYPE: Record<BrushType, number> = {
     brush: 1,
     eraser: 2,
+    eyedropper: 3,
 }
 
 export interface BrushSettings {
@@ -19,7 +20,7 @@ export interface BrushSettings {
 export const DEFAULT_BRUSH: BrushSettings = {
     size: 20,
     hardness: 1,
-    color: '#e04040',
+    color: '#000000',
     opacity: 1,
     brushType: "brush"
 }
