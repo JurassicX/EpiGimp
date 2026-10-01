@@ -46,8 +46,8 @@ export function ToolPanel({ filters, onFilterChange, onOpenFile }: ToolPanelProp
                 value={filters.inversion} onChange={(value) => onFilterChange('inversion', value)} />
       </div>
       <div>
-        <button>pinceau</button>
-        <button>gomme</button>
+        <button onClick={() => DEFAULT_BRUSH.brushType = "brush"}>pinceau</button>
+        <button onClick={() => DEFAULT_BRUSH.brushType = "eraser"}>gomme</button>
         <div>size</div>
         <input type="number" defaultValue={20} min={1} max={100} onChange={(event) => {updateBrushSize(Number(event.target.value))}}></input>
         <div>hardness</div>
