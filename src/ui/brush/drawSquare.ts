@@ -1,16 +1,27 @@
 import type { EpiDocument } from "../core/document";
 import type { MousePos } from "../mouse/mouseEvent";
 
+export type BrushType = "brush" | "eraser"
+
+export const BRUSH_TYPE: Record<BrushType, number> = {
+    brush: 1,
+    eraser: 2,
+}
+
 export interface BrushSettings {
     size: number
     hardness: number
     color: string
+    opacity: number
+    brushType: BrushType
 }
 
 export const DEFAULT_BRUSH: BrushSettings = {
     size: 20,
     hardness: 1,
     color: '#e04040',
+    opacity: 1,
+    brushType: "brush"
 }
 
 export function drawCircle(pos: MousePos, testDocument: EpiDocument, brush: BrushSettings) {
@@ -23,8 +34,12 @@ export function drawCircle(pos: MousePos, testDocument: EpiDocument, brush: Brus
     layer.ctx.fillStyle = brush.color
     layer.ctx.beginPath()
     layer.ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2)
+    if (DEFAULT_BRUSH.brushType === "eraser")
+        layer.ctx.globalCompositeOperation = "destination-out"
     layer.ctx.fill()
+    layer.ctx.globalAlpha = brush.opacity
     layer.ctx.filter = 'none'
+    layer.ctx.globalCompositeOperation = "source-over"
 }
 
 export function drawStroke(from: MousePos, to: MousePos, testDocument: EpiDocument, brush: BrushSettings) {
