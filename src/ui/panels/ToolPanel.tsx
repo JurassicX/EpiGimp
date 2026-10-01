@@ -21,6 +21,10 @@ function updateBrushOpacity(opacity: number) {
   DEFAULT_BRUSH.opacity = opacity
 }
 
+function updateBrushColor(color: string) {
+  DEFAULT_BRUSH.color = color
+}
+
 export function ToolPanel({ filters, onFilterChange, onOpenFile }: ToolPanelProps) {
   return (
     <aside className="left-panel">
@@ -48,12 +52,15 @@ export function ToolPanel({ filters, onFilterChange, onOpenFile }: ToolPanelProp
       <div>
         <button onClick={() => DEFAULT_BRUSH.brushType = "brush"}>pinceau</button>
         <button onClick={() => DEFAULT_BRUSH.brushType = "eraser"}>gomme</button>
+        <button onClick={() => DEFAULT_BRUSH.brushType = "eyedropper"}>pipette</button>
+        <div>color</div>
+        <input type="color" onChange={(event) => {updateBrushColor(event.target.value)}} ></input>
         <div>size</div>
-        <input type="number" defaultValue={20} min={1} max={100} onChange={(event) => {updateBrushSize(Number(event.target.value))}}></input>
+        <input type="number" defaultValue={20} min={1} max={1000} onChange={(event) => {updateBrushSize(Number(event.target.value))}}></input>
         <div>hardness</div>
-        <input type="number" defaultValue={1} min={0} max={1} onChange={(event) => {updateBrushOpaHardness(Number(event.target.value))}} ></input>
+        <input type="number" defaultValue={1} min={0} max={1} step={0.1} onChange={(event) => {updateBrushOpaHardness(Number(event.target.value))}} ></input>
         <div>opacity</div>
-        <input type="number" defaultValue={1} min={0} max={1} onChange={(event) => {updateBrushOpacity(Number(event.target.value))}}></input>
+        <input type="number" defaultValue={1} min={0} max={1} step={0.1} onChange={(event) => {updateBrushOpacity(Number(event.target.value))}}></input>
 
       </div>
     </aside>
