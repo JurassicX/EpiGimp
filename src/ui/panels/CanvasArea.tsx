@@ -5,16 +5,16 @@ import { getMousePos, type MousePos } from '../mouse/mouseEvent'
 import './CanvasArea.css'
 import { DEFAULT_BRUSH, drawCircle, drawStroke } from '../brush/drawSquare'
 import { hexColor } from '../core/hexColor'
-import { createTestDocument } from '../core/createTestDoc'
+import type { EpiDocument } from '../core/document'
 
 interface CanvasAreaProps {
   image: HTMLImageElement | null
   filters: FilterSettings
+  doc: EpiDocument
 }
 
-export function CanvasArea({ image, filters }: CanvasAreaProps) {
+export function CanvasArea({ image, filters, doc }: CanvasAreaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const testDocument = useMemo(() => createTestDocument(), [])
   const stroke = useRef<MousePos[] | null>(null)
 
   useEffect(() => {
@@ -24,9 +24,9 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
     if (!ctx) return
 
     if (!image) {
-      canvas.width = testDocument.width
-      canvas.height = testDocument.height
-      renderDocument(ctx, testDocument)
+      canvas.width = doc.width
+      canvas.height = doc.height
+      renderDocument(ctx, doc)
       return
     }
 
@@ -34,15 +34,15 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
     canvas.height = image.height
     ctx.filter = toCssFilter(filters)
     ctx.drawImage(image, 0, 0)
-  }, [image, filters, testDocument])
+  }, [image, filters, doc])
 
   function paintAt(pos: MousePos) {
-    drawCircle(pos, testDocument, DEFAULT_BRUSH)
+    drawCircle(pos, doc, DEFAULT_BRUSH)
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    renderDocument(ctx, testDocument)
+    renderDocument(ctx, doc)
   }
 
   function getColorFromCoord(pos: MousePos) {
@@ -73,7 +73,7 @@ export function CanvasArea({ image, filters }: CanvasAreaProps) {
     if (!stroke.current) return
 
     const pos = getMousePos(ev.currentTarget, ev)
-    drawStroke(stroke.current[stroke.current.length - 1], pos, testDocument, DEFAULT_BRUSH)
+    drawStroke(stroke.current[stroke.current.length - 1], pos, doc, DEFAULT_BRUSH)
     stroke.current.push(pos)
     paintAt(pos)
   }
