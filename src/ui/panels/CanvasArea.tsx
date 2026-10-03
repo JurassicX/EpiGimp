@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { toCssFilter, type FilterSettings } from '../core/filters'
 import { renderDocument } from '../core/renderer'
 import { getMousePos, type MousePos } from '../mouse/mouseEvent'
