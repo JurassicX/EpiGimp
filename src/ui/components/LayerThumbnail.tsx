@@ -13,5 +13,5 @@ export function LayerThumbnail ({ layer }: { layer: Layer}) {
         ctx.drawImage(layer.canvas, 0, 0, 64, 48)
     }, [layer])
 
-    return <canvas ref={canvasRef} width={64} height={48} />
+    return <canvas className="checkerboard" ref={canvasRef} width={64} height={48} />
 }
