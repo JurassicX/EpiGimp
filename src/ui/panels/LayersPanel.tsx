@@ -1,4 +1,5 @@
-import { addLayer, type EpiDocument, type Layer } from "../core/document"
+import { LayerThumbnail } from "../components/LayerThumbnail"
+import { type EpiDocument } from "../core/document"
 
 interface LayersPanelProps {
   doc: EpiDocument
@@ -14,9 +15,9 @@ export function LayersPanel({ doc, onAddLayer, onDeleteLayer }: LayersPanelProps
       <div>Layers:</div>
       <button onClick={onAddLayer}>ajouter</button>
       {doc.layers.toReversed().map((layer) => (
-        <div>
-          <div key={layer.id}>{layer.name}</div>
-          <canvas></canvas>
+        <div key={layer.id}>
+          <div>{layer.name}</div>
+          <LayerThumbnail layer={layer} ></LayerThumbnail>
           <button onClick={() => onDeleteLayer(layer.id)}>suprimer</button>
         </div>
       ))}
