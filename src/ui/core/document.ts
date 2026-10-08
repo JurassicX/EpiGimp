@@ -1,3 +1,5 @@
+import { DEFAULT_FILTERS, type FilterSettings } from './filters'
+
 export type BlendMode = 'normal' | 'multiply' | 'screen' | 'overlay' | 'difference'
 
 export const BLEND_MODES: Record<BlendMode, GlobalCompositeOperation> = {
@@ -14,6 +16,7 @@ export interface Layer {
   visible: boolean
   opacity: number
   blendMode: BlendMode
+  filters: FilterSettings
   canvas: OffscreenCanvas
   ctx: OffscreenCanvasRenderingContext2D
 }
@@ -36,6 +39,7 @@ export function createLayer(width: number, height: number, name: string): Layer 
     visible: true,
     opacity: 1,
     blendMode: 'normal',
+    filters: { ...DEFAULT_FILTERS },
     canvas,
     ctx,
   }

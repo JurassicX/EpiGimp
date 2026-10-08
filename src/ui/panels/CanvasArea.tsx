@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { toCssFilter, type FilterSettings } from '../core/filters'
 import { renderDocument } from '../core/renderer'
 import { getMousePos, type MousePos } from '../mouse/mouseEvent'
 import './CanvasArea.css'
@@ -8,11 +7,10 @@ import { hexColor } from '../core/hexColor'
 import type { EpiDocument } from '../core/document'
 
 interface CanvasAreaProps {
-  filters: FilterSettings
   doc: EpiDocument
 }
 
-export function CanvasArea({ filters, doc }: CanvasAreaProps) {
+export function CanvasArea({ doc }: CanvasAreaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stroke = useRef<MousePos[] | null>(null)
 
@@ -24,10 +22,9 @@ export function CanvasArea({ filters, doc }: CanvasAreaProps) {
 
     canvas.width = doc.width
     canvas.height = doc.height
-    ctx.filter = toCssFilter(filters)
     renderDocument(ctx, doc)
 
-  }, [filters, doc])
+  }, [doc])
 
   function paintAt(pos: MousePos) {
     drawCircle(pos, doc, DEFAULT_BRUSH)

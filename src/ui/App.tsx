@@ -11,18 +11,18 @@ import { DEFAULT_FILTERS, type FilterSettings } from './core/filters'
 
 export function App() {
   const [doc, setDoc] = useState(createTestDocument)
-  const [filters, setFilters] = useState<FilterSettings>(DEFAULT_FILTERS)
+  const activeFilters = doc.layers.find(layer => layer.id === doc.activeLayerId)?.filters ?? DEFAULT_FILTERS
 
-  const setFilter = useCallback((key: keyof FilterSettings, value: number) => {
-    setFilters((previous) => ({ ...previous, [key]: value }))
-  }, [])
+  function setFilter(key: keyof FilterSettings, value: number) {
+    const layers = doc.layers.map(layer => layer.id === doc.activeLayerId ? { ...layer, filters: { ...layer.filters, [key]: value } } : layer)
+    setDoc({ ...doc, layers })
+  }
   
   const openFile = useCallback((file: File) => {
     const url = URL.createObjectURL(file)
     const loaded = new Image()
     loaded.addEventListener('load', () => {
       URL.revokeObjectURL(url)
-      setFilters(DEFAULT_FILTERS)
       const newDoc = createDocument(loaded.width, loaded.height)
       newDoc.layers[0].ctx.drawImage(loaded, 0, 0)
       setDoc(newDoc)
@@ -51,8 +51,8 @@ export function App() {
   return (
     <div className="app">
       <TopBar />
-      <ToolPanel filters={filters} onFilterChange={setFilter} onOpenFile={openFile} />
-      <CanvasArea filters={filters} doc={doc} />
+      <ToolPanel filters={activeFilters} onFilterChange={setFilter} onOpenFile={openFile} />
+      <CanvasArea doc={doc} />
       <LayersPanel doc={doc} onAddLayer={handleAddLayer} onDeleteLayer={deleteLayer} onSelectLayer={selectLayer} onShowSwitchLayer={showSwitchLayer}/>
     </div>
   )
