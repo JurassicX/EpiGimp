@@ -22,12 +22,16 @@ export function App() {
     setDoc({ ...doc, layers: [...doc.layers.filter(layer => layer.id !== id)] })
   }
 
+  function selectLayer(id: string) {
+    setDoc({...doc, activeLayerId: id})
+  }
+
   return (
     <div className="app">
       <TopBar />
       <ToolPanel filters={filters} onFilterChange={setFilter} onOpenFile={openFile} />
       <CanvasArea image={image} filters={filters} doc={doc} />
-      <LayersPanel doc={doc} onAddLayer={handleAddLayer} onDeleteLayer={deleteLayer}/>
+      <LayersPanel doc={doc} onAddLayer={handleAddLayer} onDeleteLayer={deleteLayer} onSelectLayer={selectLayer}/>
     </div>
   )
 }

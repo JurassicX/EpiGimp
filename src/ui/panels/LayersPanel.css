@@ -1,0 +1,11 @@
+.layer-row {
+  padding: 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.layer-row.selected {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
