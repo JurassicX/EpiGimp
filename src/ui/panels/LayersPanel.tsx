@@ -7,9 +7,10 @@ interface LayersPanelProps {
   onAddLayer: () => void
   onDeleteLayer: (id: string) => void
   onSelectLayer: (id: string) => void
+  onShowSwitchLayer: (id: string) => void
 }
 
-export function LayersPanel({ doc, onAddLayer, onDeleteLayer, onSelectLayer }: LayersPanelProps) {
+export function LayersPanel({ doc, onAddLayer, onDeleteLayer, onSelectLayer, onShowSwitchLayer }: LayersPanelProps) {
 
 
   return (
@@ -23,6 +24,7 @@ export function LayersPanel({ doc, onAddLayer, onDeleteLayer, onSelectLayer }: L
             <LayerThumbnail layer={layer} ></LayerThumbnail>
           </div>
           <button onClick={() => onDeleteLayer(layer.id)}>suprimer</button>
+          <button onClick={() => onShowSwitchLayer(layer.id)}>visible</button>
         </div>
       ))}
     </aside>

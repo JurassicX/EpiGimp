@@ -23,7 +23,12 @@ export function App() {
   }
 
   function selectLayer(id: string) {
-    setDoc({...doc, activeLayerId: id})
+    setDoc({ ...doc, activeLayerId: id})
+  }
+
+  function showSwitchLayer(id: string) {
+    const layers = doc.layers.map(layer => layer.id === id ? { ...layer, visible: !layer.visible } : layer)
+    setDoc({ ...doc, layers })
   }
 
   return (
@@ -31,7 +36,7 @@ export function App() {
       <TopBar />
       <ToolPanel filters={filters} onFilterChange={setFilter} onOpenFile={openFile} />
       <CanvasArea image={image} filters={filters} doc={doc} />
-      <LayersPanel doc={doc} onAddLayer={handleAddLayer} onDeleteLayer={deleteLayer} onSelectLayer={selectLayer}/>
+      <LayersPanel doc={doc} onAddLayer={handleAddLayer} onDeleteLayer={deleteLayer} onSelectLayer={selectLayer} onShowSwitchLayer={showSwitchLayer}/>
     </div>
   )
 }
