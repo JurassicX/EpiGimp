@@ -2,16 +2,33 @@ import { TopBar } from './panels/TopBar'
 import { ToolPanel } from './panels/ToolPanel'
 import { CanvasArea } from './panels/CanvasArea'
 import { LayersPanel } from './panels/LayersPanel'
-import { useImageFilters } from './hooks/useImageFilters'
 import './App.css'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { createTestDocument } from './core/createTestDoc'
-import { createLayer } from './core/document'
+import { createDocument, createLayer } from './core/document'
+import { DEFAULT_FILTERS, type FilterSettings } from './core/filters'
 
 
 export function App() {
-  const { image, filters, setFilter, openFile } = useImageFilters()
   const [doc, setDoc] = useState(createTestDocument)
+  const [filters, setFilters] = useState<FilterSettings>(DEFAULT_FILTERS)
+
+  const setFilter = useCallback((key: keyof FilterSettings, value: number) => {
+    setFilters((previous) => ({ ...previous, [key]: value }))
+  }, [])
+  
+  const openFile = useCallback((file: File) => {
+    const url = URL.createObjectURL(file)
+    const loaded = new Image()
+    loaded.addEventListener('load', () => {
+      URL.revokeObjectURL(url)
+      setFilters(DEFAULT_FILTERS)
+      const newDoc = createDocument(loaded.width, loaded.height)
+      newDoc.layers[0].ctx.drawImage(loaded, 0, 0)
+      setDoc(newDoc)
+    })
+    loaded.src = url
+  }, [])
 
   function handleAddLayer() {
     const layer = createLayer(doc.width, doc.height, 'New layer')
@@ -35,7 +52,7 @@ export function App() {
     <div className="app">
       <TopBar />
       <ToolPanel filters={filters} onFilterChange={setFilter} onOpenFile={openFile} />
-      <CanvasArea image={image} filters={filters} doc={doc} />
+      <CanvasArea filters={filters} doc={doc} />
       <LayersPanel doc={doc} onAddLayer={handleAddLayer} onDeleteLayer={deleteLayer} onSelectLayer={selectLayer} onShowSwitchLayer={showSwitchLayer}/>
     </div>
   )

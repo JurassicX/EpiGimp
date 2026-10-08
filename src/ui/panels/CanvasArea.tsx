@@ -8,12 +8,11 @@ import { hexColor } from '../core/hexColor'
 import type { EpiDocument } from '../core/document'
 
 interface CanvasAreaProps {
-  image: HTMLImageElement | null
   filters: FilterSettings
   doc: EpiDocument
 }
 
-export function CanvasArea({ image, filters, doc }: CanvasAreaProps) {
+export function CanvasArea({ filters, doc }: CanvasAreaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stroke = useRef<MousePos[] | null>(null)
 
@@ -23,18 +22,12 @@ export function CanvasArea({ image, filters, doc }: CanvasAreaProps) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    if (!image) {
-      canvas.width = doc.width
-      canvas.height = doc.height
-      renderDocument(ctx, doc)
-      return
-    }
-
-    canvas.width = image.width
-    canvas.height = image.height
+    canvas.width = doc.width
+    canvas.height = doc.height
     ctx.filter = toCssFilter(filters)
-    ctx.drawImage(image, 0, 0)
-  }, [image, filters, doc])
+    renderDocument(ctx, doc)
+
+  }, [filters, doc])
 
   function paintAt(pos: MousePos) {
     drawCircle(pos, doc, DEFAULT_BRUSH)
