@@ -1,11 +1,98 @@
+.panel-title {
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.right-panel > button {
+  width: 100%;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--gradient);
+  border: none;
+}
+
+.right-panel > button:hover {
+  filter: brightness(1.15);
+}
+
 .layer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
   padding: 6px;
+  background: var(--panel-raised);
   border: 1px solid transparent;
-  border-radius: 4px;
-  cursor: pointer;
+  border-radius: 8px;
+  cursor: grab;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.layer-row:hover {
+  border-color: var(--border);
 }
 
 .layer-row.selected {
   background: var(--accent-bg);
   border-color: var(--accent-border);
+}
+
+.layer-row.dragging {
+  opacity: 0.4;
+}
+
+.layer-row.drag-over {
+  outline: 2px dashed var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.layer-row.hidden-layer .layer-info {
+  opacity: 0.4;
+}
+
+.layer-row button {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.layer-row button.visibility {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+.layer-row button.visibility.on {
+  color: var(--text-h);
+  background: var(--accent-bg);
+  border-style: solid;
+  border-color: var(--accent-border);
+}
+
+.layer-info {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--text-h);
+}
+
+.layer-info > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layer-info canvas {
+  --check-size: 6px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--border);
 }

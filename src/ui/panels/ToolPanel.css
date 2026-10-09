@@ -3,5 +3,68 @@
 }
 
 .tool-panel-item {
-  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tool-panel-item input[type="file"] {
+  width: 100%;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tool-panel-item input[type="file"]::file-selector-button {
+  margin-right: 8px;
+  padding: 6px 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tool-panel-item button {
+  font-weight: 600;
+  color: #fff;
+  background: var(--gradient);
+  border: none;
+}
+
+.tool-panel-item button:hover {
+  filter: brightness(1.15);
+}
+
+.filters-panel {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.brush-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 16px;
+}
+
+.brush-panel > button {
+  padding: 6px 2px;
+  font-size: 13px;
+}
+
+.brush-panel > div,
+.brush-panel > input {
+  grid-column: 1 / -1;
+}
+
+.brush-panel > div {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
