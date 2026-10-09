@@ -7,6 +7,7 @@ interface ToolPanelProps {
   filters: FilterSettings
   onFilterChange: (key: keyof FilterSettings, value: number) => void
   onOpenFile: (file: File) => void
+  onSaveImage: () => void
 }
 
 function updateBrushSize(size: number) {
@@ -25,7 +26,7 @@ function updateBrushColor(color: string) {
   DEFAULT_BRUSH.color = color
 }
 
-export function ToolPanel({ filters, onFilterChange, onOpenFile }: ToolPanelProps) {
+export function ToolPanel({ filters, onFilterChange, onOpenFile, onSaveImage }: ToolPanelProps) {
   return (
     <aside className="left-panel">
       <div className="tool-panel">
@@ -38,6 +39,7 @@ export function ToolPanel({ filters, onFilterChange, onOpenFile }: ToolPanelProp
               if (file) onOpenFile(file)
             }}
           />
+          <button onClick={() => onSaveImage()} >sauvegarder</button>
         </div>
 
         <Slider id="brightness" label="brightness" min={0} max={200}
