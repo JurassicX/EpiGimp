@@ -7,6 +7,7 @@ import { useCallback, useState } from 'react'
 import { createTestDocument } from './core/createTestDoc'
 import { createDocument, createLayer } from './core/document'
 import { DEFAULT_FILTERS, type FilterSettings } from './core/filters'
+import { renderDocument } from './core/renderer'
 
 
 export function App() {
@@ -30,6 +31,28 @@ export function App() {
     loaded.src = url
   }, [])
 
+  function saveImage() {
+    const downloadCanvas = document.createElement('canvas')
+    if (!downloadCanvas) return
+    const donwloadCanvasCtx = downloadCanvas.getContext('2d')
+    if (!donwloadCanvasCtx) return
+
+    downloadCanvas.width = doc.width
+    downloadCanvas.height = doc.height
+    renderDocument(donwloadCanvasCtx, doc)
+
+    downloadCanvas.toBlob((blob) => {
+      const newA = document.createElement('a')
+      if (!blob) return
+      const url = URL.createObjectURL(blob)
+
+      newA.href = url
+      newA.download = "Epigimp.png"
+      newA.click()
+      URL.revokeObjectURL(url)
+    })
+  }
+
   function handleAddLayer() {
     const layer = createLayer(doc.width, doc.height, 'New layer')
     setDoc({ ...doc, layers: [...doc.layers, layer] })
@@ -51,7 +74,7 @@ export function App() {
   return (
     <div className="app">
       <TopBar />
-      <ToolPanel filters={activeFilters} onFilterChange={setFilter} onOpenFile={openFile} />
+      <ToolPanel filters={activeFilters} onFilterChange={setFilter} onOpenFile={openFile} onSaveImage={saveImage} />
       <CanvasArea doc={doc} />
       <LayersPanel doc={doc} onAddLayer={handleAddLayer} onDeleteLayer={deleteLayer} onSelectLayer={selectLayer} onShowSwitchLayer={showSwitchLayer}/>
     </div>

@@ -13,6 +13,7 @@ dist-ssr
 *.local
 dist-react
 dist-electron
+/img
 
 # Editor directories and files
 .vscode/*
