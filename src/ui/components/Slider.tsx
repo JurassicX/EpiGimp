@@ -1,18 +1,20 @@
-import './Slider.css'
+import "./Slider.css";
 
 interface SliderProps {
-  id: string
-  label: string
-  value: number
-  min: number
-  max: number
-  onChange: (value: number) => void
+  id: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
 }
 
 export function Slider({ id, label, value, min, max, onChange }: SliderProps) {
   return (
     <div className="slider">
-      <label className="slider-label" htmlFor={id}>{label}</label>
+      <label className="slider-label" htmlFor={id}>
+        {label}
+      </label>
       <input
         className="slider-input"
         type="range"
@@ -23,5 +25,5 @@ export function Slider({ id, label, value, min, max, onChange }: SliderProps) {
         onChange={(event) => onChange(Number(event.target.value))}
       />
     </div>
-  )
+  );
 }
