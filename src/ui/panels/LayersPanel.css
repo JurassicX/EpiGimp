@@ -32,7 +32,10 @@
   border-radius: 8px;
   cursor: grab;
   user-select: none;
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    opacity 0.15s;
 }
 
 .layer-row:hover {

@@ -1,6 +1,11 @@
 .checkerboard {
   --check-size: 16px;
   background-color: #4b4d5c;
-  background-image: conic-gradient(#3b3d4a 25%, transparent 0 50%, #3b3d4a 0 75%, transparent 0);
+  background-image: conic-gradient(
+    #3b3d4a 25%,
+    transparent 0 50%,
+    #3b3d4a 0 75%,
+    transparent 0
+  );
   background-size: calc(var(--check-size) * 2) calc(var(--check-size) * 2);
 }

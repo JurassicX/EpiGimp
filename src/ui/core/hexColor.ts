@@ -1,3 +1,3 @@
 export function hexColor(c: number) {
-    return c.toString(16).padStart(2, '0')
+  return c.toString(16).padStart(2, "0");
 }

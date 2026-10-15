@@ -1,16 +1,16 @@
-import type { PanelVisibility } from '../core/panels'
+import type { PanelVisibility } from "../core/panels";
 
 interface TopBarProps {
-  panels: PanelVisibility
-  onTogglePanel: (name: keyof PanelVisibility) => void
+  panels: PanelVisibility;
+  onTogglePanel: (name: keyof PanelVisibility) => void;
 }
 
-const MENU: { name: keyof PanelVisibility, label: string }[] = [
-  { name: 'file', label: 'File' },
-  { name: 'edit', label: 'Edit' },
-  { name: 'image', label: 'Image' },
-  { name: 'filters', label: 'Filters' },
-]
+const MENU: { name: keyof PanelVisibility; label: string }[] = [
+  { name: "file", label: "File" },
+  { name: "edit", label: "Edit" },
+  { name: "image", label: "Image" },
+  { name: "filters", label: "Filters" },
+];
 
 export function TopBar({ panels, onTogglePanel }: TopBarProps) {
   return (
@@ -20,7 +20,7 @@ export function TopBar({ panels, onTogglePanel }: TopBarProps) {
         {MENU.map((item) => (
           <button
             key={item.name}
-            className={panels[item.name] ? 'menu-item active' : 'menu-item'}
+            className={panels[item.name] ? "menu-item active" : "menu-item"}
             onClick={() => onTogglePanel(item.name)}
           >
             {item.label}
@@ -28,5 +28,5 @@ export function TopBar({ panels, onTogglePanel }: TopBarProps) {
         ))}
       </nav>
     </header>
-  )
+  );
 }

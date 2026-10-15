@@ -8,8 +8,12 @@
   height: 100vh;
 }
 
-.app.no-left { --left-width: 0px; }
-.app.no-right { --right-width: 0px; }
+.app.no-left {
+  --left-width: 0px;
+}
+.app.no-right {
+  --right-width: 0px;
+}
 
 .topbar {
   grid-area: top;
@@ -60,8 +64,15 @@
   background: var(--panel);
 }
 
-.left-panel { grid-area: left; border-right: 1px solid var(--border); }
-.right-panel { grid-area: right; border-left: 1px solid var(--border); padding: 16px; }
+.left-panel {
+  grid-area: left;
+  border-right: 1px solid var(--border);
+}
+.right-panel {
+  grid-area: right;
+  border-left: 1px solid var(--border);
+  padding: 16px;
+}
 
 .canvas-area {
   grid-area: canvas;
@@ -77,5 +88,7 @@
 .canvas-area canvas {
   max-width: 100%;
   max-height: 100%;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.6),
+    0 0 0 1px var(--border);
 }

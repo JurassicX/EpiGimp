@@ -1,8 +1,8 @@
 export interface PanelVisibility {
-  file: boolean
-  edit: boolean
-  image: boolean
-  filters: boolean
+  file: boolean;
+  edit: boolean;
+  image: boolean;
+  filters: boolean;
 }
 
 export const DEFAULT_PANELS: PanelVisibility = {
@@ -10,4 +10,4 @@ export const DEFAULT_PANELS: PanelVisibility = {
   edit: true,
   image: true,
   filters: true,
-}
+};

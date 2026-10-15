@@ -1,8 +1,8 @@
 export interface FilterSettings {
-  brightness: number
-  saturation: number
-  blur: number
-  inversion: number
+  brightness: number;
+  saturation: number;
+  blur: number;
+  inversion: number;
 }
 
 export const DEFAULT_FILTERS: FilterSettings = {
@@ -10,7 +10,7 @@ export const DEFAULT_FILTERS: FilterSettings = {
   saturation: 100,
   blur: 0,
   inversion: 0,
-}
+};
 
 export function toCssFilter(filters: FilterSettings): string {
   return [
@@ -18,5 +18,5 @@ export function toCssFilter(filters: FilterSettings): string {
     `saturate(${filters.saturation}%)`,
     `blur(${filters.blur}px)`,
     `invert(${filters.inversion}%)`,
-  ].join(' ')
+  ].join(" ");
 }
