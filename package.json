@@ -14,10 +14,10 @@
     "transpile:electron": "tsc --project src/electron/tsconfig.json",
     "dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --arm64",
     "dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
-    "dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64"
+    "dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64",
+    "format": "prettier --write ."
   },
   "dependencies": {
-    "@magic/format": "^0.0.75",
     "prettier": "^3.9.10",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
