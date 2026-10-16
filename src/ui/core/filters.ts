@@ -1,4 +1,5 @@
 export interface FilterSettings {
+  opacity: number;
   brightness: number;
   saturation: number;
   blur: number;
@@ -6,6 +7,7 @@ export interface FilterSettings {
 }
 
 export const DEFAULT_FILTERS: FilterSettings = {
+  opacity: 100,
   brightness: 100,
   saturation: 100,
   blur: 0,
@@ -14,6 +16,7 @@ export const DEFAULT_FILTERS: FilterSettings = {
 
 export function toCssFilter(filters: FilterSettings): string {
   return [
+    `opacity(${filters.opacity}%)`,
     `brightness(${filters.brightness}%)`,
     `saturate(${filters.saturation}%)`,
     `blur(${filters.blur}px)`,
