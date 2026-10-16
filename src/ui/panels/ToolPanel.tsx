@@ -55,6 +55,14 @@ export function ToolPanel({
         {panels.filters && (
           <div className="filters-panel">
             <Slider
+              id="opacity"
+              label="opacity"
+              min={0}
+              max={100}
+              value={filters.opacity}
+              onChange={(value) => onFilterChange("opacity", value)}
+            />
+            <Slider
               id="brightness"
               label="brightness"
               min={0}
