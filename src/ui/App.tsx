@@ -67,9 +67,17 @@ export function App() {
   }
 
   function deleteLayer(id: string) {
+    if (doc.layers.length === 1) return;
+
+    const index = doc.layers.findIndex((layer) => layer.id === id);
+    const remaining = doc.layers.filter((layer) => layer.id !== id);
+    const neighbour = remaining[Math.max(0, index - 1)];
+
     setDoc({
       ...doc,
       layers: [...doc.layers.filter((layer) => layer.id !== id)],
+      activeLayerId:
+        doc.activeLayerId === id ? neighbour.id : doc.activeLayerId,
     });
   }
 
