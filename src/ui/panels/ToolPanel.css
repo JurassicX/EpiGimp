@@ -38,6 +38,11 @@
   filter: brightness(1.15);
 }
 
+.brush-panel button.active {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
 .filters-panel {
   padding: 6px 0;
   border-bottom: 1px solid var(--border);

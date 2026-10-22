@@ -41,7 +41,7 @@ export function drawCircle(
   layer.ctx.fillStyle = brush.color;
   layer.ctx.beginPath();
   layer.ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
-  if (DEFAULT_BRUSH.brushType === "eraser")
+  if (brush.brushType === "eraser")
     layer.ctx.globalCompositeOperation = "destination-out";
   layer.ctx.fill();
   layer.ctx.globalAlpha = brush.opacity;

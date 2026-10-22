@@ -9,10 +9,12 @@ import { createDocument, createLayer } from "./core/document";
 import { DEFAULT_FILTERS, type FilterSettings } from "./core/filters";
 import { renderDocument } from "./core/renderer";
 import { DEFAULT_PANELS, type PanelVisibility } from "./core/panels";
+import { DEFAULT_BRUSH, type BrushSettings } from "./brush/drawSquare";
 
 export function App() {
   const [doc, setDoc] = useState(createTestDocument);
   const [panels, setPanels] = useState<PanelVisibility>(DEFAULT_PANELS);
+  const [brush, setBrush] = useState<BrushSettings>(DEFAULT_BRUSH);
   const showLeft = panels.file || panels.edit || panels.filters;
   const activeFilters =
     doc.layers.find((layer) => layer.id === doc.activeLayerId)?.filters ??
@@ -106,6 +108,10 @@ export function App() {
     setDoc({ ...doc, layers });
   }
 
+  function updateBrush(changes: Partial<BrushSettings>) {
+    setBrush({ ...brush, ...changes });
+  }
+
   function togglePanel(name: keyof PanelVisibility) {
     setPanels({ ...panels, [name]: !panels[name] });
   }
@@ -123,13 +129,15 @@ export function App() {
       {showLeft && (
         <ToolPanel
           panels={panels}
+          brush={brush}
+          onBrushChange={updateBrush}
           filters={activeFilters}
           onFilterChange={setFilter}
           onOpenFile={openFile}
           onSaveImage={saveImage}
         />
       )}
-      <CanvasArea doc={doc} />
+      <CanvasArea doc={doc} brush={brush} onBrushChange={updateBrush} />
       {panels.image && (
         <LayersPanel
           doc={doc}
