@@ -10,11 +10,13 @@ import { DEFAULT_FILTERS, type FilterSettings } from "./core/filters";
 import { renderDocument } from "./core/renderer";
 import { DEFAULT_PANELS, type PanelVisibility } from "./core/panels";
 import { DEFAULT_BRUSH, type BrushSettings } from "./brush/drawSquare";
+import { NewDocumentDialog } from "./components/NewDocumentDialog";
 
 export function App() {
   const [doc, setDoc] = useState(createTestDocument);
   const [panels, setPanels] = useState<PanelVisibility>(DEFAULT_PANELS);
   const [brush, setBrush] = useState<BrushSettings>(DEFAULT_BRUSH);
+  const [showNewDialog, setShowNewDialog] = useState(false);
   const showLeft = panels.file || panels.edit || panels.filters;
   const activeFilters =
     doc.layers.find((layer) => layer.id === doc.activeLayerId)?.filters ??
@@ -61,6 +63,14 @@ export function App() {
       newA.click();
       URL.revokeObjectURL(url);
     });
+  }
+
+  function newDocument(width: number, height: number, color: string) {
+    const newDoc = createDocument(width, height);
+    newDoc.layers[0].ctx.fillStyle = color;
+    newDoc.layers[0].ctx.fillRect(0, 0, width, height);
+    setDoc(newDoc);
+    setShowNewDialog(false);
   }
 
   function handleAddLayer() {
@@ -135,6 +145,7 @@ export function App() {
           onFilterChange={setFilter}
           onOpenFile={openFile}
           onSaveImage={saveImage}
+          onNewDocument={() => setShowNewDialog(true)}
         />
       )}
       <CanvasArea doc={doc} brush={brush} onBrushChange={updateBrush} />
@@ -146,6 +157,12 @@ export function App() {
           onSelectLayer={selectLayer}
           onShowSwitchLayer={showSwitchLayer}
           onMoveLayer={moveLayer}
+        />
+      )}
+      {showNewDialog && (
+        <NewDocumentDialog
+          onCreate={newDocument}
+          onCancel={() => setShowNewDialog(false)}
         />
       )}
     </div>
