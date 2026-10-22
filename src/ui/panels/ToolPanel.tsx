@@ -12,6 +12,7 @@ interface ToolPanelProps {
   onFilterChange: (key: keyof FilterSettings, value: number) => void;
   onOpenFile: (file: File) => void;
   onSaveImage: () => void;
+  onNewDocument: () => void;
 }
 
 export function ToolPanel({
@@ -22,6 +23,7 @@ export function ToolPanel({
   onFilterChange,
   onOpenFile,
   onSaveImage,
+  onNewDocument,
 }: ToolPanelProps) {
   function toolClass(type: BrushType) {
     return brush.brushType === type ? "active" : "";
@@ -32,6 +34,7 @@ export function ToolPanel({
       <div className="tool-panel">
         {panels.file && (
           <div className="tool-panel-item">
+            <button onClick={onNewDocument}>nouveau</button>
             <input
               type="file"
               accept="image/*"
