@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { renderDocument } from "../core/renderer";
 import { getMousePos, type MousePos } from "../mouse/mouseEvent";
 import "./CanvasArea.css";
@@ -10,6 +10,9 @@ import {
 import { hexColor } from "../core/hexColor";
 import type { EpiDocument } from "../core/document";
 
+const MIN_ZOOM = 0.05;
+const MAX_ZOOM = 32;
+
 interface CanvasAreaProps {
   doc: EpiDocument;
   brush: BrushSettings;
@@ -19,6 +22,98 @@ interface CanvasAreaProps {
 export function CanvasArea({ doc, brush, onBrushChange }: CanvasAreaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stroke = useRef<MousePos[] | null>(null);
+  const areaRef = useRef<HTMLElement>(null);
+  const spaceHeld = useRef(false);
+  const pan = useRef<{ x: number; y: number } | null>(null);
+  const [view, setView] = useState({ zoom: 1, x: 0, y: 0 });
+
+  function fitToView() {
+    const area = areaRef.current;
+    if (!area) return;
+
+    const zoom = Math.min(
+      1,
+      (area.clientWidth - 64) / doc.width,
+      (area.clientHeight - 64) / doc.height,
+    );
+    setView({
+      zoom,
+      x: (area.clientWidth - doc.width * zoom) / 2,
+      y: (area.clientHeight - doc.height * zoom) / 2,
+    });
+  }
+
+  useEffect(fitToView, [doc.width, doc.height]);
+
+  useEffect(() => {
+    const area = areaRef.current;
+    if (!area) return;
+
+    const handleWheel = (ev: WheelEvent) => {
+      if (!ev.ctrlKey) return;
+      ev.preventDefault();
+
+      const rect = area.getBoundingClientRect();
+      const cursorX = ev.clientX - rect.left;
+      const cursorY = ev.clientY - rect.top;
+
+      setView((previous) => {
+        const zoom = Math.min(
+          MAX_ZOOM,
+          Math.max(MIN_ZOOM, previous.zoom * (ev.deltaY < 0 ? 1.1 : 1 / 1.1)),
+        );
+        const ratio = zoom / previous.zoom;
+        return {
+          zoom,
+          x: cursorX - (cursorX - previous.x) * ratio,
+          y: cursorY - (cursorY - previous.y) * ratio,
+        };
+      });
+    };
+
+    area.addEventListener("wheel", handleWheel, { passive: false });
+    return () => area.removeEventListener("wheel", handleWheel);
+  }, []);
+
+  useEffect(() => {
+    function handleKey(ev: KeyboardEvent) {
+      if (ev.code !== "Space") return;
+      if (ev.target instanceof HTMLInputElement) return;
+      ev.preventDefault();
+      spaceHeld.current = ev.type === "keydown";
+    }
+
+    window.addEventListener("keydown", handleKey);
+    window.addEventListener("keyup", handleKey);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener("keyup", handleKey);
+    };
+  }, []);
+
+  function isPanStart(ev: React.PointerEvent) {
+    return ev.button === 1 || spaceHeld.current;
+  }
+
+  function handleAreaPointerDown(ev: React.PointerEvent<HTMLElement>) {
+    if (!isPanStart(ev)) return;
+    ev.preventDefault();
+    ev.currentTarget.setPointerCapture(ev.pointerId);
+    pan.current = { x: ev.clientX - view.x, y: ev.clientY - view.y };
+  }
+
+  function handleAreaPointerMove(ev: React.PointerEvent<HTMLElement>) {
+    if (!pan.current) return;
+    setView({
+      ...view,
+      x: ev.clientX - pan.current.x,
+      y: ev.clientY - pan.current.y,
+    });
+  }
+
+  function handleAreaPointerUp() {
+    pan.current = null;
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -57,7 +152,7 @@ export function CanvasArea({ doc, brush, onBrushChange }: CanvasAreaProps) {
   }
 
   function handlePointerDown(ev: React.PointerEvent<HTMLCanvasElement>) {
-    if (stroke.current) return;
+    if (stroke.current || isPanStart(ev)) return;
 
     const pos = getMousePos(ev.currentTarget, ev);
 
@@ -83,17 +178,33 @@ export function CanvasArea({ doc, brush, onBrushChange }: CanvasAreaProps) {
   }
 
   return (
-    <main className="canvas-area">
+    <main
+      ref={areaRef}
+      className="canvas-area"
+      onPointerDown={handleAreaPointerDown}
+      onPointerMove={handleAreaPointerMove}
+      onPointerUp={handleAreaPointerUp}
+    >
       <canvas
         ref={canvasRef}
         className="checkerboard"
         width={800}
         height={600}
+        style={{
+          left: view.x,
+          top: view.y,
+          width: doc.width * view.zoom,
+          height: doc.height * view.zoom,
+          imageRendering: view.zoom >= 2 ? "pixelated" : "auto",
+        }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       />
+      <button className="zoom-label" title="fit to window" onClick={fitToView}>
+        {Math.round(view.zoom * 100)}%
+      </button>
     </main>
   );
 }
