@@ -9,3 +9,13 @@
   );
   background-size: calc(var(--check-size) * 2) calc(var(--check-size) * 2);
 }
+
+.zoom-label {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  background: var(--panel);
+}
