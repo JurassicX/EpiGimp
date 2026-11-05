@@ -11,7 +11,11 @@ import {
   type BlendMode,
   type SelectionRect,
 } from "./core/document";
-import { DEFAULT_FILTERS, type FilterSettings } from "./core/filters";
+import {
+  DEFAULT_FILTERS,
+  toCssFilter,
+  type FilterSettings,
+} from "./core/filters";
 import { renderDocument } from "./core/renderer";
 import { DEFAULT_PANELS, type PanelVisibility } from "./core/panels";
 import { DEFAULT_BRUSH, type BrushSettings } from "./brush/drawSquare";
@@ -31,6 +35,28 @@ export function App() {
     const layers = doc.layers.map((layer) =>
       layer.id === doc.activeLayerId
         ? { ...layer, filters: { ...layer.filters, [key]: value } }
+        : layer,
+    );
+    setDoc({ ...doc, layers });
+  }
+
+  function applyFilters() {
+    const active = doc.layers.find((layer) => layer.id === doc.activeLayerId);
+    if (!active) return;
+
+    const copy = new OffscreenCanvas(doc.width, doc.height);
+    const copyCtx = copy.getContext("2d");
+    if (!copyCtx) return;
+    copyCtx.drawImage(active.canvas, 0, 0);
+
+    active.ctx.clearRect(0, 0, doc.width, doc.height);
+    active.ctx.filter = toCssFilter(active.filters);
+    active.ctx.drawImage(copy, 0, 0);
+    active.ctx.filter = "none";
+
+    const layers = doc.layers.map((layer) =>
+      layer.id === active.id
+        ? { ...layer, filters: { ...DEFAULT_FILTERS } }
         : layer,
     );
     setDoc({ ...doc, layers });
@@ -159,6 +185,7 @@ export function App() {
           onBrushChange={updateBrush}
           filters={activeFilters}
           onFilterChange={setFilter}
+          onApplyFilters={applyFilters}
           onOpenFile={openFile}
           onSaveImage={saveImage}
           onNewDocument={() => setShowNewDialog(true)}
