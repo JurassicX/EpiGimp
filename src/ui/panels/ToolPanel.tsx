@@ -112,6 +112,12 @@ export function ToolPanel({
           >
             pipette
           </button>
+          <button
+            className={toolClass("select")}
+            onClick={() => onBrushChange({ brushType: "select" })}
+          >
+            sélection
+          </button>
           <div>color</div>
           <input
             type="color"

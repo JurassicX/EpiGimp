@@ -5,7 +5,12 @@ import { LayersPanel } from "./panels/LayersPanel";
 import "./App.css";
 import { useCallback, useState } from "react";
 import { createTestDocument } from "./core/createTestDoc";
-import { createDocument, createLayer, type BlendMode } from "./core/document";
+import {
+  createDocument,
+  createLayer,
+  type BlendMode,
+  type SelectionRect,
+} from "./core/document";
 import { DEFAULT_FILTERS, type FilterSettings } from "./core/filters";
 import { renderDocument } from "./core/renderer";
 import { DEFAULT_PANELS, type PanelVisibility } from "./core/panels";
@@ -125,6 +130,10 @@ export function App() {
     setDoc({ ...doc, layers });
   }
 
+  function setSelection(selection: SelectionRect | null) {
+    setDoc((previous) => ({ ...previous, selection }));
+  }
+
   function updateBrush(changes: Partial<BrushSettings>) {
     setBrush({ ...brush, ...changes });
   }
@@ -155,7 +164,12 @@ export function App() {
           onNewDocument={() => setShowNewDialog(true)}
         />
       )}
-      <CanvasArea doc={doc} brush={brush} onBrushChange={updateBrush} />
+      <CanvasArea
+        doc={doc}
+        brush={brush}
+        onBrushChange={updateBrush}
+        onSelectionChange={setSelection}
+      />
       {panels.image && (
         <LayersPanel
           doc={doc}

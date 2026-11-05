@@ -1,12 +1,13 @@
 import type { EpiDocument } from "../core/document";
 import type { MousePos } from "../mouse/mouseEvent";
 
-export type BrushType = "brush" | "eraser" | "eyedropper";
+export type BrushType = "brush" | "eraser" | "eyedropper" | "select";
 
 export const BRUSH_TYPE: Record<BrushType, number> = {
   brush: 1,
   eraser: 2,
   eyedropper: 3,
+  select: 4,
 };
 
 export interface BrushSettings {
@@ -36,17 +37,23 @@ export function drawCircle(
   if (!layer) return;
 
   const radius = (brush.size / 2) * pos.pressure;
+  const selection = testDocument.selection;
 
+  layer.ctx.save();
+  if (selection) {
+    layer.ctx.beginPath();
+    layer.ctx.rect(selection.x, selection.y, selection.width, selection.height);
+    layer.ctx.clip();
+  }
   layer.ctx.filter = `blur(${(1 - brush.hardness) * radius * 0.5}px)`;
   layer.ctx.fillStyle = brush.color;
+  layer.ctx.globalAlpha = brush.opacity;
   layer.ctx.beginPath();
   layer.ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
   if (brush.brushType === "eraser")
     layer.ctx.globalCompositeOperation = "destination-out";
   layer.ctx.fill();
-  layer.ctx.globalAlpha = brush.opacity;
-  layer.ctx.filter = "none";
-  layer.ctx.globalCompositeOperation = "source-over";
+  layer.ctx.restore();
 }
 
 export function drawStroke(

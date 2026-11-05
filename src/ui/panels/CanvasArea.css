@@ -19,3 +19,30 @@
   font-variant-numeric: tabular-nums;
   background: var(--panel);
 }
+
+.selection {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.selection rect {
+  fill: none;
+  stroke-width: 1;
+}
+
+.selection-outline {
+  stroke: #000;
+}
+
+.selection-ants {
+  stroke: #fff;
+  stroke-dasharray: 6 4;
+  animation: marching-ants 0.5s linear infinite;
+}
+
+@keyframes marching-ants {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
