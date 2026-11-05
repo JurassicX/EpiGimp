@@ -5,7 +5,7 @@ import { LayersPanel } from "./panels/LayersPanel";
 import "./App.css";
 import { useCallback, useState } from "react";
 import { createTestDocument } from "./core/createTestDoc";
-import { createDocument, createLayer } from "./core/document";
+import { createDocument, createLayer, type BlendMode } from "./core/document";
 import { DEFAULT_FILTERS, type FilterSettings } from "./core/filters";
 import { renderDocument } from "./core/renderer";
 import { DEFAULT_PANELS, type PanelVisibility } from "./core/panels";
@@ -118,6 +118,13 @@ export function App() {
     setDoc({ ...doc, layers });
   }
 
+  function setBlendMode(id: string, blendMode: BlendMode) {
+    const layers = doc.layers.map((layer) =>
+      layer.id === id ? { ...layer, blendMode } : layer,
+    );
+    setDoc({ ...doc, layers });
+  }
+
   function updateBrush(changes: Partial<BrushSettings>) {
     setBrush({ ...brush, ...changes });
   }
@@ -157,6 +164,7 @@ export function App() {
           onSelectLayer={selectLayer}
           onShowSwitchLayer={showSwitchLayer}
           onMoveLayer={moveLayer}
+          onBlendModeChange={setBlendMode}
         />
       )}
       {showNewDialog && (

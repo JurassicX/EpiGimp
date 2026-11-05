@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { LayerThumbnail } from "../components/LayerThumbnail";
-import { type EpiDocument, type Layer } from "../core/document";
+import {
+  BLEND_MODES,
+  type BlendMode,
+  type EpiDocument,
+  type Layer,
+} from "../core/document";
 import "./LayersPanel.css";
+
+const BLEND_MODE_NAMES = Object.keys(BLEND_MODES) as BlendMode[];
 
 interface LayersPanelProps {
   doc: EpiDocument;
@@ -10,6 +17,7 @@ interface LayersPanelProps {
   onSelectLayer: (id: string) => void;
   onShowSwitchLayer: (id: string) => void;
   onMoveLayer: (draggedId: string, targetId: string) => void;
+  onBlendModeChange: (id: string, blendMode: BlendMode) => void;
 }
 
 export function LayersPanel({
@@ -19,6 +27,7 @@ export function LayersPanel({
   onSelectLayer,
   onShowSwitchLayer,
   onMoveLayer,
+  onBlendModeChange,
 }: LayersPanelProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -62,6 +71,20 @@ export function LayersPanel({
             <LayerThumbnail layer={layer}></LayerThumbnail>
             <div>{layer.name}</div>
           </div>
+          {layer.id === doc.activeLayerId && (
+            <select
+              value={layer.blendMode}
+              onChange={(event) =>
+                onBlendModeChange(layer.id, event.target.value as BlendMode)
+              }
+            >
+              {BLEND_MODE_NAMES.map((mode) => (
+                <option key={mode} value={mode}>
+                  {mode}
+                </option>
+              ))}
+            </select>
+          )}
           <button onClick={() => onDeleteLayer(layer.id)}>suprimer</button>
           <button
             className={layer.visible ? "visibility on" : "visibility"}
