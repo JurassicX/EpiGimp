@@ -22,11 +22,19 @@ export interface Layer {
   ctx: OffscreenCanvasRenderingContext2D;
 }
 
+export interface SelectionRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface EpiDocument {
   width: number;
   height: number;
   layers: Layer[];
   activeLayerId: string;
+  selection: SelectionRect | null;
 }
 
 export function createLayer(
@@ -58,6 +66,7 @@ export function createDocument(width: number, height: number): EpiDocument {
     height,
     layers: [background],
     activeLayerId: background.id,
+    selection: null,
   };
 }
 
