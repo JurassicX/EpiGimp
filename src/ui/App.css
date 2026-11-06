@@ -62,6 +62,39 @@
   overflow-x: hidden;
   overflow-y: auto;
   background: var(--panel);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.left-panel button,
+.right-panel button {
+  font-size: 13px;
+}
+
+.panel-section {
+  padding: 14px 16px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-title {
+  margin-bottom: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.primary {
+  font-weight: 600;
+  color: #fff;
+  background: var(--gradient);
+  border: none;
+}
+
+.primary:hover {
+  color: #fff;
+  filter: brightness(1.15);
 }
 
 .left-panel {
