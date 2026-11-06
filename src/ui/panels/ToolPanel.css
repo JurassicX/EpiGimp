@@ -1,89 +1,67 @@
-.tool-panel {
-  width: 100%;
-}
-
-.tool-panel-item {
+.file-actions {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
-  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.tool-panel-item input[type="file"] {
-  width: 100%;
-  font-size: 12px;
-  color: var(--muted);
+.file-actions > * {
+  flex: 1 1 auto;
 }
 
-.tool-panel-item input[type="file"]::file-selector-button {
-  margin-right: 8px;
+.file-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px 10px;
-  font: inherit;
+  font-size: 13px;
   color: var(--text);
   background: var(--panel-raised);
   border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 
-.tool-panel-item button {
-  font-weight: 600;
-  color: #fff;
-  background: var(--gradient);
-  border: none;
+.file-open:hover {
+  color: var(--text-h);
+  border-color: var(--accent-border);
 }
 
-.tool-panel-item button:hover {
-  filter: brightness(1.15);
+.tool-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
 }
 
-.brush-panel button.active {
+.tool-buttons button.active {
+  color: var(--text-h);
   background: var(--accent-bg);
   border-color: var(--accent-border);
 }
 
-.filters-panel {
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.filters-panel > button {
-  display: block;
-  width: calc(100% - 32px);
-  margin: 6px 16px 10px;
-  font-weight: 600;
-  color: #fff;
-  background: var(--gradient);
-  border: none;
-}
-
-.filters-panel > button:hover {
-  filter: brightness(1.15);
-}
-
-.brush-panel {
+.brush-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  padding: 16px;
+  grid-template-columns: 1fr 96px;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 16px;
 }
 
-.brush-panel > button {
-  padding: 6px 2px;
-  font-size: 13px;
+.brush-options label {
+  font-size: 12px;
 }
 
-.brush-panel > div,
-.brush-panel > input {
-  grid-column: 1 / -1;
+.brush-options input[type="number"] {
+  padding: 4px 8px;
 }
 
-.brush-panel > div {
-  margin-top: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
+.brush-options input[type="color"] {
+  height: 28px;
+}
+
+.apply {
+  width: 100%;
+  margin-top: 12px;
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { LayerThumbnail } from "../components/LayerThumbnail";
+import { EyeIcon, EyeOffIcon, TrashIcon } from "../components/Icons";
 import {
   BLEND_MODES,
   type BlendMode,
@@ -49,8 +50,12 @@ export function LayersPanel({
 
   return (
     <aside className="right-panel">
-      <div className="panel-title">Layers:</div>
-      <button onClick={onAddLayer}>ajouter</button>
+      <div className="layers-header">
+        <div className="panel-title">Layers</div>
+        <button className="add-layer" onClick={onAddLayer}>
+          + ajouter
+        </button>
+      </div>
       {doc.layers.toReversed().map((layer) => (
         <div
           key={layer.id}
@@ -85,12 +90,19 @@ export function LayersPanel({
               ))}
             </select>
           )}
-          <button onClick={() => onDeleteLayer(layer.id)}>suprimer</button>
           <button
-            className={layer.visible ? "visibility on" : "visibility"}
+            className={layer.visible ? "icon-button on" : "icon-button"}
+            title={layer.visible ? "visible" : "caché"}
             onClick={() => onShowSwitchLayer(layer.id)}
           >
-            {layer.visible ? "visible" : "caché"}
+            {layer.visible ? <EyeIcon /> : <EyeOffIcon />}
+          </button>
+          <button
+            className="icon-button danger"
+            title="supprimer"
+            onClick={() => onDeleteLayer(layer.id)}
+          >
+            <TrashIcon />
           </button>
         </div>
       ))}
