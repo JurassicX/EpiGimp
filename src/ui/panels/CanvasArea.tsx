@@ -8,7 +8,7 @@ import {
   type BrushSettings,
 } from "../brush/drawSquare";
 import { hexColor } from "../core/hexColor";
-import type { EpiDocument } from "../core/document";
+import type { EpiDocument, SelectionRect } from "../core/document";
 
 const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 32;
@@ -17,14 +17,21 @@ interface CanvasAreaProps {
   doc: EpiDocument;
   brush: BrushSettings;
   onBrushChange: (changes: Partial<BrushSettings>) => void;
+  onSelectionChange: (selection: SelectionRect | null) => void;
 }
 
-export function CanvasArea({ doc, brush, onBrushChange }: CanvasAreaProps) {
+export function CanvasArea({
+  doc,
+  brush,
+  onBrushChange,
+  onSelectionChange,
+}: CanvasAreaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stroke = useRef<MousePos[] | null>(null);
   const areaRef = useRef<HTMLElement>(null);
   const spaceHeld = useRef(false);
   const pan = useRef<{ x: number; y: number } | null>(null);
+  const selectionStart = useRef<MousePos | null>(null);
   const [view, setView] = useState({ zoom: 1, x: 0, y: 0 });
 
   function fitToView() {
@@ -91,6 +98,25 @@ export function CanvasArea({ doc, brush, onBrushChange }: CanvasAreaProps) {
     };
   }, []);
 
+  useEffect(() => {
+    function handleDeselect(ev: KeyboardEvent) {
+      if (!ev.ctrlKey || ev.code !== "KeyD") return;
+      ev.preventDefault();
+      onSelectionChange(null);
+    }
+
+    window.addEventListener("keydown", handleDeselect);
+    return () => window.removeEventListener("keydown", handleDeselect);
+  }, [onSelectionChange]);
+
+  function rectBetween(a: MousePos, b: MousePos): SelectionRect {
+    const left = Math.round(Math.max(0, Math.min(a.x, b.x)));
+    const top = Math.round(Math.max(0, Math.min(a.y, b.y)));
+    const right = Math.round(Math.min(doc.width, Math.max(a.x, b.x)));
+    const bottom = Math.round(Math.min(doc.height, Math.max(a.y, b.y)));
+    return { x: left, y: top, width: right - left, height: bottom - top };
+  }
+
   function isPanStart(ev: React.PointerEvent) {
     return ev.button === 1 || spaceHeld.current;
   }
@@ -156,6 +182,12 @@ export function CanvasArea({ doc, brush, onBrushChange }: CanvasAreaProps) {
 
     const pos = getMousePos(ev.currentTarget, ev);
 
+    if (brush.brushType === "select") {
+      selectionStart.current = pos;
+      onSelectionChange(null);
+      return;
+    }
+
     if (brush.brushType === "eyedropper") {
       getColorFromCoord(pos);
       return;
@@ -165,6 +197,15 @@ export function CanvasArea({ doc, brush, onBrushChange }: CanvasAreaProps) {
   }
 
   function handlePointerMove(ev: React.PointerEvent<HTMLCanvasElement>) {
+    if (selectionStart.current) {
+      const rect = rectBetween(
+        selectionStart.current,
+        getMousePos(ev.currentTarget, ev),
+      );
+      onSelectionChange(rect.width > 0 && rect.height > 0 ? rect : null);
+      return;
+    }
+
     if (!stroke.current) return;
 
     const pos = getMousePos(ev.currentTarget, ev);
@@ -175,6 +216,7 @@ export function CanvasArea({ doc, brush, onBrushChange }: CanvasAreaProps) {
 
   function handlePointerUp() {
     stroke.current = null;
+    selectionStart.current = null;
   }
 
   return (
@@ -202,6 +244,20 @@ export function CanvasArea({ doc, brush, onBrushChange }: CanvasAreaProps) {
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       />
+      {doc.selection && (
+        <svg
+          className="selection"
+          style={{
+            left: view.x + doc.selection.x * view.zoom,
+            top: view.y + doc.selection.y * view.zoom,
+            width: doc.selection.width * view.zoom,
+            height: doc.selection.height * view.zoom,
+          }}
+        >
+          <rect className="selection-outline" width="100%" height="100%" />
+          <rect className="selection-ants" width="100%" height="100%" />
+        </svg>
+      )}
       <button className="zoom-label" title="fit to window" onClick={fitToView}>
         {Math.round(view.zoom * 100)}%
       </button>
