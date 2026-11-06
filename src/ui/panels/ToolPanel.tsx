@@ -10,6 +10,7 @@ interface ToolPanelProps {
   onBrushChange: (changes: Partial<BrushSettings>) => void;
   filters: FilterSettings;
   onFilterChange: (key: keyof FilterSettings, value: number) => void;
+  onApplyFilters: () => void;
   onOpenFile: (file: File) => void;
   onSaveImage: () => void;
   onNewDocument: () => void;
@@ -21,6 +22,7 @@ export function ToolPanel({
   onBrushChange,
   filters,
   onFilterChange,
+  onApplyFilters,
   onOpenFile,
   onSaveImage,
   onNewDocument,
@@ -66,6 +68,14 @@ export function ToolPanel({
               onChange={(value) => onFilterChange("brightness", value)}
             />
             <Slider
+              id="contrast"
+              label="contrast"
+              min={0}
+              max={200}
+              value={filters.contrast}
+              onChange={(value) => onFilterChange("contrast", value)}
+            />
+            <Slider
               id="saturation"
               label="saturation"
               min={0}
@@ -89,6 +99,7 @@ export function ToolPanel({
               value={filters.inversion}
               onChange={(value) => onFilterChange("inversion", value)}
             />
+            <button onClick={onApplyFilters}>appliquer</button>
           </div>
         )}
       </div>
