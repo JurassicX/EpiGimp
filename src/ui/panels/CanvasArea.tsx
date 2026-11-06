@@ -9,6 +9,7 @@ import {
 } from "../brush/drawSquare";
 import { hexColor } from "../core/hexColor";
 import type { EpiDocument, SelectionRect } from "../core/document";
+import { captureChange, copyCanvas, type PixelChange } from "../core/history";
 
 const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 32;
@@ -18,6 +19,7 @@ interface CanvasAreaProps {
   brush: BrushSettings;
   onBrushChange: (changes: Partial<BrushSettings>) => void;
   onSelectionChange: (selection: SelectionRect | null) => void;
+  onPixelsChange: (pixels: PixelChange) => void;
 }
 
 export function CanvasArea({
@@ -25,6 +27,7 @@ export function CanvasArea({
   brush,
   onBrushChange,
   onSelectionChange,
+  onPixelsChange,
 }: CanvasAreaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stroke = useRef<MousePos[] | null>(null);
@@ -32,6 +35,7 @@ export function CanvasArea({
   const spaceHeld = useRef(false);
   const pan = useRef<{ x: number; y: number } | null>(null);
   const selectionStart = useRef<MousePos | null>(null);
+  const strokeSnapshot = useRef<OffscreenCanvas | null>(null);
   const [view, setView] = useState({ zoom: 1, x: 0, y: 0 });
 
   function fitToView() {
@@ -117,6 +121,20 @@ export function CanvasArea({
     return { x: left, y: top, width: right - left, height: bottom - top };
   }
 
+  function strokeRegion(
+    points: MousePos[],
+    padding: number,
+  ): SelectionRect | null {
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    const left = Math.max(0, Math.floor(Math.min(...xs) - padding));
+    const top = Math.max(0, Math.floor(Math.min(...ys) - padding));
+    const right = Math.min(doc.width, Math.ceil(Math.max(...xs) + padding));
+    const bottom = Math.min(doc.height, Math.ceil(Math.max(...ys) + padding));
+    if (right <= left || bottom <= top) return null;
+    return { x: left, y: top, width: right - left, height: bottom - top };
+  }
+
   function isPanStart(ev: React.PointerEvent) {
     return ev.button === 1 || spaceHeld.current;
   }
@@ -192,6 +210,8 @@ export function CanvasArea({
       getColorFromCoord(pos);
       return;
     }
+    const layer = doc.layers.find((l) => l.id === doc.activeLayerId);
+    strokeSnapshot.current = layer ? copyCanvas(layer.canvas) : null;
     stroke.current = [pos];
     paintAt(pos);
   }
@@ -215,7 +235,17 @@ export function CanvasArea({
   }
 
   function handlePointerUp() {
+    const layer = doc.layers.find((l) => l.id === doc.activeLayerId);
+
+    if (stroke.current && strokeSnapshot.current && layer) {
+      const region = strokeRegion(stroke.current, brush.size * 1.5 + 2);
+      if (region)
+        onPixelsChange(
+          captureChange(layer.ctx, strokeSnapshot.current, region),
+        );
+    }
     stroke.current = null;
+    strokeSnapshot.current = null;
     selectionStart.current = null;
   }
 

@@ -3,12 +3,13 @@ import { ToolPanel } from "./panels/ToolPanel";
 import { CanvasArea } from "./panels/CanvasArea";
 import { LayersPanel } from "./panels/LayersPanel";
 import "./App.css";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createTestDocument } from "./core/createTestDoc";
 import {
   createDocument,
   createLayer,
   type BlendMode,
+  type EpiDocument,
   type SelectionRect,
 } from "./core/document";
 import {
@@ -20,16 +21,94 @@ import { renderDocument } from "./core/renderer";
 import { DEFAULT_PANELS, type PanelVisibility } from "./core/panels";
 import { DEFAULT_BRUSH, type BrushSettings } from "./brush/drawSquare";
 import { NewDocumentDialog } from "./components/NewDocumentDialog";
+import {
+  HISTORY_LIMIT,
+  captureChange,
+  copyCanvas,
+  type HistoryEntry,
+  type PixelChange,
+} from "./core/history";
 
 export function App() {
   const [doc, setDoc] = useState(createTestDocument);
   const [panels, setPanels] = useState<PanelVisibility>(DEFAULT_PANELS);
   const [brush, setBrush] = useState<BrushSettings>(DEFAULT_BRUSH);
   const [showNewDialog, setShowNewDialog] = useState(false);
+  const undoStack = useRef<HistoryEntry[]>([]);
+  const redoStack = useRef<HistoryEntry[]>([]);
   const showLeft = panels.file || panels.edit || panels.filters;
   const activeFilters =
     doc.layers.find((layer) => layer.id === doc.activeLayerId)?.filters ??
     DEFAULT_FILTERS;
+
+  function record(entry: HistoryEntry) {
+    const last = undoStack.current[undoStack.current.length - 1];
+
+    if (entry.tag && last?.tag === entry.tag && last.doc && entry.doc) {
+      last.doc.after = entry.doc.after;
+    } else {
+      undoStack.current.push(entry);
+      if (undoStack.current.length > HISTORY_LIMIT) undoStack.current.shift();
+    }
+    redoStack.current = [];
+  }
+
+  function changeDoc(next: EpiDocument, tag?: string) {
+    record({ tag, doc: { before: doc, after: next } });
+    setDoc(next);
+  }
+
+  function recordPixels(pixels: PixelChange) {
+    record({ pixels });
+  }
+
+  function clearHistory() {
+    undoStack.current = [];
+    redoStack.current = [];
+  }
+
+  function showDoc(target: EpiDocument) {
+    setDoc({ ...target, layers: target.layers.map((layer) => ({ ...layer })) });
+  }
+
+  function undo() {
+    const entry = undoStack.current.pop();
+    if (!entry) return;
+
+    redoStack.current.push(entry);
+    if (entry.pixels) {
+      const { ctx, before, x, y } = entry.pixels;
+      ctx.putImageData(before, x, y);
+    }
+    showDoc(entry.doc ? entry.doc.before : doc);
+  }
+
+  function redo() {
+    const entry = redoStack.current.pop();
+    if (!entry) return;
+
+    undoStack.current.push(entry);
+    if (entry.pixels) {
+      const { ctx, after, x, y } = entry.pixels;
+      ctx.putImageData(after, x, y);
+    }
+    showDoc(entry.doc ? entry.doc.after : doc);
+  }
+
+  useEffect(() => {
+    function handleUndoKeys(ev: KeyboardEvent) {
+      if (!ev.ctrlKey || ev.key.toLowerCase() !== "z") return;
+      if (ev.target instanceof HTMLInputElement && ev.target.type === "number")
+        return;
+
+      ev.preventDefault();
+      if (ev.shiftKey) redo();
+      else undo();
+    }
+
+    window.addEventListener("keydown", handleUndoKeys);
+    return () => window.removeEventListener("keydown", handleUndoKeys);
+  }, [undo, redo]);
 
   function setFilter(key: keyof FilterSettings, value: number) {
     const layers = doc.layers.map((layer) =>
@@ -37,17 +116,14 @@ export function App() {
         ? { ...layer, filters: { ...layer.filters, [key]: value } }
         : layer,
     );
-    setDoc({ ...doc, layers });
+    changeDoc({ ...doc, layers }, `filter-${doc.activeLayerId}-${key}`);
   }
 
   function applyFilters() {
     const active = doc.layers.find((layer) => layer.id === doc.activeLayerId);
     if (!active) return;
 
-    const copy = new OffscreenCanvas(doc.width, doc.height);
-    const copyCtx = copy.getContext("2d");
-    if (!copyCtx) return;
-    copyCtx.drawImage(active.canvas, 0, 0);
+    const copy = copyCanvas(active.canvas);
 
     active.ctx.clearRect(0, 0, doc.width, doc.height);
     active.ctx.filter = toCssFilter(active.filters);
@@ -59,7 +135,14 @@ export function App() {
         ? { ...layer, filters: { ...DEFAULT_FILTERS } }
         : layer,
     );
-    setDoc({ ...doc, layers });
+    const next = { ...doc, layers };
+    const area = { x: 0, y: 0, width: doc.width, height: doc.height };
+
+    record({
+      doc: { before: doc, after: next },
+      pixels: captureChange(active.ctx, copy, area),
+    });
+    setDoc(next);
   }
 
   const openFile = useCallback((file: File) => {
@@ -69,6 +152,7 @@ export function App() {
       URL.revokeObjectURL(url);
       const newDoc = createDocument(loaded.width, loaded.height);
       newDoc.layers[0].ctx.drawImage(loaded, 0, 0);
+      clearHistory();
       setDoc(newDoc);
     });
     loaded.src = url;
@@ -100,13 +184,14 @@ export function App() {
     const newDoc = createDocument(width, height);
     newDoc.layers[0].ctx.fillStyle = color;
     newDoc.layers[0].ctx.fillRect(0, 0, width, height);
+    clearHistory();
     setDoc(newDoc);
     setShowNewDialog(false);
   }
 
   function handleAddLayer() {
     const layer = createLayer(doc.width, doc.height, "New layer");
-    setDoc({ ...doc, layers: [...doc.layers, layer] });
+    changeDoc({ ...doc, layers: [...doc.layers, layer] });
   }
 
   function deleteLayer(id: string) {
@@ -116,7 +201,7 @@ export function App() {
     const remaining = doc.layers.filter((layer) => layer.id !== id);
     const neighbour = remaining[Math.max(0, index - 1)];
 
-    setDoc({
+    changeDoc({
       ...doc,
       layers: [...doc.layers.filter((layer) => layer.id !== id)],
       activeLayerId:
@@ -139,21 +224,21 @@ export function App() {
     const moved = layers[from];
     layers.splice(from, 1);
     layers.splice(to, 0, moved);
-    setDoc({ ...doc, layers });
+    changeDoc({ ...doc, layers });
   }
 
   function showSwitchLayer(id: string) {
     const layers = doc.layers.map((layer) =>
       layer.id === id ? { ...layer, visible: !layer.visible } : layer,
     );
-    setDoc({ ...doc, layers });
+    changeDoc({ ...doc, layers });
   }
 
   function setBlendMode(id: string, blendMode: BlendMode) {
     const layers = doc.layers.map((layer) =>
       layer.id === id ? { ...layer, blendMode } : layer,
     );
-    setDoc({ ...doc, layers });
+    changeDoc({ ...doc, layers });
   }
 
   function setSelection(selection: SelectionRect | null) {
@@ -196,6 +281,7 @@ export function App() {
         brush={brush}
         onBrushChange={updateBrush}
         onSelectionChange={setSelection}
+        onPixelsChange={recordPixels}
       />
       {panels.image && (
         <LayersPanel
