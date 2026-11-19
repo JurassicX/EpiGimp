@@ -2,7 +2,7 @@ import type { EpiDocument } from "../core/document";
 import type { MousePos } from "../mouse/mouseEvent";
 
 export type BrushType =
-  "brush" | "eraser" | "eyedropper" | "select" | "bucket" | "wand";
+  "brush" | "eraser" | "eyedropper" | "select" | "bucket" | "wand" | "clone";
 
 export const BRUSH_TYPE: Record<BrushType, number> = {
   brush: 1,
@@ -11,6 +11,7 @@ export const BRUSH_TYPE: Record<BrushType, number> = {
   select: 4,
   bucket: 5,
   wand: 6,
+  clone: 7,
 };
 
 export interface BrushSettings {
@@ -60,23 +61,19 @@ export function drawCircle(
 export function drawStroke(
   from: MousePos,
   to: MousePos,
-  testDocument: EpiDocument,
-  brush: BrushSettings,
+  size: number,
+  paint: (pos: MousePos) => void,
 ) {
   const distance = Math.hypot(to.x - from.x, to.y - from.y);
-  const steps = Math.max(1, Math.ceil(distance / (brush.size * 0.25)));
+  const steps = Math.max(1, Math.ceil(distance / (size * 0.25)));
 
   for (let step = 1; step < steps; step++) {
     const ratio = step / steps;
 
-    drawCircle(
-      {
-        x: from.x + (to.x - from.x) * ratio,
-        y: from.y + (to.y - from.y) * ratio,
-        pressure: from.pressure + (to.pressure - from.pressure) * ratio,
-      },
-      testDocument,
-      brush,
-    );
+    paint({
+      x: from.x + (to.x - from.x) * ratio,
+      y: from.y + (to.y - from.y) * ratio,
+      pressure: from.pressure + (to.pressure - from.pressure) * ratio,
+    });
   }
 }

@@ -95,6 +95,13 @@ export function ToolPanel({
             >
               baguette
             </button>
+            <button
+              className={toolClass("clone")}
+              title="alt + clic pour choisir la source"
+              onClick={() => onBrushChange({ brushType: "clone" })}
+            >
+              tampon
+            </button>
           </div>
           <div className="brush-options">
             <label htmlFor="brush-color">color</label>

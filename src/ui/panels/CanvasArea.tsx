@@ -12,6 +12,7 @@ import type { EpiDocument, SelectionRect } from "../core/document";
 import { captureChange, copyCanvas, type PixelChange } from "../core/history";
 import { rectSelection, type Selection } from "../core/selection";
 import { fillAt, selectAt } from "../brush/fill";
+import { drawClone, type Point } from "../brush/clone";
 
 const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 32;
@@ -38,6 +39,9 @@ export function CanvasArea({
   const pan = useRef<{ x: number; y: number } | null>(null);
   const selectionStart = useRef<MousePos | null>(null);
   const strokeSnapshot = useRef<OffscreenCanvas | null>(null);
+  const cloneSource = useRef<Point | null>(null);
+  const cloneOffset = useRef<Point | null>(null);
+  const [cloneMark, setCloneMark] = useState<Point | null>(null);
   const [view, setView] = useState({ zoom: 1, x: 0, y: 0 });
 
   function fitToView() {
@@ -177,8 +181,14 @@ export function CanvasArea({
     if (ctx) renderDocument(ctx, doc);
   }
 
+  function dab(pos: MousePos) {
+    if (cloneOffset.current && strokeSnapshot.current)
+      drawClone(pos, doc, brush, strokeSnapshot.current, cloneOffset.current);
+    else drawCircle(pos, doc, brush);
+  }
+
   function paintAt(pos: MousePos) {
-    drawCircle(pos, doc, brush);
+    dab(pos);
     redraw();
   }
 
@@ -234,6 +244,20 @@ export function CanvasArea({
       getColorFromCoord(pos);
       return;
     }
+
+    if (brush.brushType === "clone") {
+      if (ev.altKey) {
+        cloneSource.current = pos;
+        setCloneMark(pos);
+        return;
+      }
+      if (!cloneSource.current) return;
+      cloneOffset.current = {
+        x: cloneSource.current.x - pos.x,
+        y: cloneSource.current.y - pos.y,
+      };
+    }
+
     const layer = doc.layers.find((l) => l.id === doc.activeLayerId);
     strokeSnapshot.current = layer ? copyCanvas(layer.canvas) : null;
     stroke.current = [pos];
@@ -255,9 +279,12 @@ export function CanvasArea({
     if (!stroke.current) return;
 
     const pos = getMousePos(ev.currentTarget, ev);
-    drawStroke(stroke.current[stroke.current.length - 1], pos, doc, brush);
+    drawStroke(stroke.current[stroke.current.length - 1], pos, brush.size, dab);
     stroke.current.push(pos);
     paintAt(pos);
+
+    const offset = cloneOffset.current;
+    if (offset) setCloneMark({ x: pos.x + offset.x, y: pos.y + offset.y });
   }
 
   function handlePointerUp() {
@@ -270,8 +297,10 @@ export function CanvasArea({
           captureChange(layer.ctx, strokeSnapshot.current, region),
         );
     }
+    if (cloneOffset.current) setCloneMark(cloneSource.current);
     stroke.current = null;
     strokeSnapshot.current = null;
+    cloneOffset.current = null;
     selectionStart.current = null;
   }
 
@@ -315,6 +344,15 @@ export function CanvasArea({
           <path className="selection-outline" d={doc.selection.outline} />
           <path className="selection-ants" d={doc.selection.outline} />
         </svg>
+      )}
+      {brush.brushType === "clone" && cloneMark && (
+        <div
+          className="clone-source"
+          style={{
+            left: view.x + cloneMark.x * view.zoom,
+            top: view.y + cloneMark.y * view.zoom,
+          }}
+        />
       )}
       <button className="zoom-label" title="fit to window" onClick={fitToView}>
         {Math.round(view.zoom * 100)}%
