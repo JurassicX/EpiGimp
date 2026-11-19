@@ -1,6 +1,9 @@
-export interface MousePos {
+export interface Point {
   x: number;
   y: number;
+}
+
+export interface MousePos extends Point {
   pressure: number;
 }
 

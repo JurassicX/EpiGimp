@@ -102,6 +102,19 @@ export function ToolPanel({
             >
               tampon
             </button>
+            <button
+              className={toolClass("move")}
+              onClick={() => onBrushChange({ brushType: "move" })}
+            >
+              déplacer
+            </button>
+            <button
+              className={toolClass("transform")}
+              title="entrée pour appliquer, échap pour annuler"
+              onClick={() => onBrushChange({ brushType: "transform" })}
+            >
+              transformer
+            </button>
           </div>
           <div className="brush-options">
             <label htmlFor="brush-color">color</label>
