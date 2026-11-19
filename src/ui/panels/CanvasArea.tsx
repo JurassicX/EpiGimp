@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { renderDocument } from "../core/renderer";
-import { getMousePos, type MousePos } from "../mouse/mouseEvent";
+import { getMousePos, type MousePos, type Point } from "../mouse/mouseEvent";
 import "./CanvasArea.css";
 import {
   drawCircle,
@@ -12,10 +12,32 @@ import type { EpiDocument, SelectionRect } from "../core/document";
 import { captureChange, copyCanvas, type PixelChange } from "../core/history";
 import { rectSelection, type Selection } from "../core/selection";
 import { fillAt, selectAt } from "../brush/fill";
-import { drawClone, type Point } from "../brush/clone";
+import { drawClone } from "../brush/clone";
+import {
+  CORNERS,
+  boxFromBounds,
+  changedRegion,
+  contentBounds,
+  cornerOf,
+  drawTransformed,
+  isSameBox,
+  rotateHandle,
+  scaleFromCorner,
+  toLocal,
+  type TransformBox,
+} from "../core/transform";
 
 const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 32;
+const HANDLE_RADIUS = 6;
+const ROTATE_DISTANCE = 28;
+
+interface TransformDrag {
+  mode: "move" | "rotate" | "scale";
+  corner: Point;
+  start: Point;
+  startBox: TransformBox;
+}
 
 interface CanvasAreaProps {
   doc: EpiDocument;
@@ -42,6 +64,12 @@ export function CanvasArea({
   const cloneSource = useRef<Point | null>(null);
   const cloneOffset = useRef<Point | null>(null);
   const [cloneMark, setCloneMark] = useState<Point | null>(null);
+  const moveStart = useRef<Point | null>(null);
+  const transformSource = useRef<OffscreenCanvas | null>(null);
+  const transformBounds = useRef<SelectionRect | null>(null);
+  const transformDrag = useRef<TransformDrag | null>(null);
+  const boxRef = useRef<TransformBox | null>(null);
+  const [box, setBox] = useState<TransformBox | null>(null);
   const [view, setView] = useState({ zoom: 1, x: 0, y: 0 });
 
   function fitToView() {
@@ -145,7 +173,128 @@ export function CanvasArea({
     return ev.button === 1 || spaceHeld.current;
   }
 
+  function activeLayer() {
+    return doc.layers.find((l) => l.id === doc.activeLayerId);
+  }
+
+  function updateBox(next: TransformBox | null) {
+    boxRef.current = next;
+    setBox(next);
+  }
+
+  function startTransform() {
+    const layer = activeLayer();
+    const bounds = layer ? contentBounds(layer.canvas) : null;
+
+    transformSource.current = layer ? copyCanvas(layer.canvas) : null;
+    transformBounds.current = bounds;
+    updateBox(bounds ? boxFromBounds(bounds) : null);
+  }
+
+  function finishTransform(apply: boolean) {
+    const layer = activeLayer();
+    const source = transformSource.current;
+    const bounds = transformBounds.current;
+    const current = boxRef.current;
+    if (!layer || !source || !bounds || !current) return;
+    if (isSameBox(current, boxFromBounds(bounds))) return;
+
+    if (apply) {
+      const region = changedRegion(current, bounds, doc.width, doc.height);
+      onPixelsChange(captureChange(layer.ctx, source, region));
+    } else {
+      layer.ctx.clearRect(0, 0, doc.width, doc.height);
+      layer.ctx.drawImage(source, 0, 0);
+      redraw();
+    }
+  }
+
+  useEffect(() => {
+    if (brush.brushType !== "transform") return;
+    startTransform();
+    return () => {
+      finishTransform(true);
+      updateBox(null);
+    };
+  }, [brush.brushType, doc.activeLayerId]);
+
+  useEffect(() => {
+    if (brush.brushType !== "transform") return;
+
+    function handleTransformKeys(ev: KeyboardEvent) {
+      if (ev.key !== "Enter" && ev.key !== "Escape") return;
+      if (ev.target instanceof HTMLInputElement) return;
+      ev.preventDefault();
+      finishTransform(ev.key === "Enter");
+      startTransform();
+    }
+
+    window.addEventListener("keydown", handleTransformKeys);
+    return () => window.removeEventListener("keydown", handleTransformKeys);
+  });
+
+  function transformModeAt(pos: Point): TransformDrag | null {
+    if (!box) return null;
+
+    const reach = HANDLE_RADIUS / view.zoom;
+    const near = (point: Point) =>
+      Math.hypot(point.x - pos.x, point.y - pos.y) <= reach;
+    const drag = { start: pos, startBox: box, corner: { x: 0, y: 0 } };
+
+    if (near(rotateHandle(box, ROTATE_DISTANCE / view.zoom)))
+      return { ...drag, mode: "rotate" };
+    const corner = CORNERS.find((sign) => near(cornerOf(box, sign)));
+    if (corner) return { ...drag, mode: "scale", corner };
+
+    const local = toLocal(box, pos);
+    if (
+      Math.abs(local.x) <= box.width / 2 &&
+      Math.abs(local.y) <= box.height / 2
+    )
+      return { ...drag, mode: "move" };
+    return null;
+  }
+
+  function draggedBox(drag: TransformDrag, pos: Point, keepRatio: boolean) {
+    const { startBox, start } = drag;
+
+    if (drag.mode === "move")
+      return {
+        ...startBox,
+        x: startBox.x + pos.x - start.x,
+        y: startBox.y + pos.y - start.y,
+      };
+
+    if (drag.mode === "rotate") {
+      const angle =
+        Math.atan2(pos.y - startBox.y, pos.x - startBox.x) + Math.PI / 2;
+      const step = Math.PI / 12;
+      return {
+        ...startBox,
+        angle: keepRatio ? Math.round(angle / step) * step : angle,
+      };
+    }
+
+    return scaleFromCorner(
+      startBox,
+      drag.corner,
+      pos,
+      transformBounds.current!,
+      keepRatio,
+    );
+  }
+
   function handleAreaPointerDown(ev: React.PointerEvent<HTMLElement>) {
+    const canvas = canvasRef.current;
+
+    if (!isPanStart(ev) && brush.brushType === "transform" && canvas) {
+      const drag = transformModeAt(getMousePos(canvas, ev));
+      if (!drag) return;
+      ev.currentTarget.setPointerCapture(ev.pointerId);
+      transformDrag.current = drag;
+      return;
+    }
+
     if (!isPanStart(ev)) return;
     ev.preventDefault();
     ev.currentTarget.setPointerCapture(ev.pointerId);
@@ -153,6 +302,23 @@ export function CanvasArea({
   }
 
   function handleAreaPointerMove(ev: React.PointerEvent<HTMLElement>) {
+    const drag = transformDrag.current;
+    const layer = activeLayer();
+    const canvas = canvasRef.current;
+
+    if (drag && layer && canvas && transformSource.current) {
+      const next = draggedBox(drag, getMousePos(canvas, ev), ev.shiftKey);
+      drawTransformed(
+        layer.ctx,
+        transformSource.current,
+        transformBounds.current!,
+        next,
+      );
+      redraw();
+      updateBox(next);
+      return;
+    }
+
     if (!pan.current) return;
     setView({
       ...view,
@@ -163,6 +329,7 @@ export function CanvasArea({
 
   function handleAreaPointerUp() {
     pan.current = null;
+    transformDrag.current = null;
   }
 
   useEffect(() => {
@@ -224,6 +391,16 @@ export function CanvasArea({
 
     const pos = getMousePos(ev.currentTarget, ev);
 
+    if (brush.brushType === "transform") return;
+
+    if (brush.brushType === "move") {
+      const layer = activeLayer();
+      if (!layer) return;
+      strokeSnapshot.current = copyCanvas(layer.canvas);
+      moveStart.current = pos;
+      return;
+    }
+
     if (brush.brushType === "select") {
       selectionStart.current = pos;
       onSelectionChange(null);
@@ -265,6 +442,20 @@ export function CanvasArea({
   }
 
   function handlePointerMove(ev: React.PointerEvent<HTMLCanvasElement>) {
+    const layer = activeLayer();
+
+    if (moveStart.current && strokeSnapshot.current && layer) {
+      const pos = getMousePos(ev.currentTarget, ev);
+      layer.ctx.clearRect(0, 0, doc.width, doc.height);
+      layer.ctx.drawImage(
+        strokeSnapshot.current,
+        Math.round(pos.x - moveStart.current.x),
+        Math.round(pos.y - moveStart.current.y),
+      );
+      redraw();
+      return;
+    }
+
     if (selectionStart.current) {
       const rect = rectBetween(
         selectionStart.current,
@@ -297,10 +488,16 @@ export function CanvasArea({
           captureChange(layer.ctx, strokeSnapshot.current, region),
         );
     }
+    if (moveStart.current && strokeSnapshot.current && layer) {
+      const area = { x: 0, y: 0, width: doc.width, height: doc.height };
+      onPixelsChange(captureChange(layer.ctx, strokeSnapshot.current, area));
+    }
+
     if (cloneOffset.current) setCloneMark(cloneSource.current);
     stroke.current = null;
     strokeSnapshot.current = null;
     cloneOffset.current = null;
+    moveStart.current = null;
     selectionStart.current = null;
   }
 
@@ -345,6 +542,11 @@ export function CanvasArea({
           <path className="selection-ants" d={doc.selection.outline} />
         </svg>
       )}
+      {box && (
+        <svg className="transform-box">
+          <TransformOverlay box={box} view={view} />
+        </svg>
+      )}
       {brush.brushType === "clone" && cloneMark && (
         <div
           className="clone-source"
@@ -358,5 +560,30 @@ export function CanvasArea({
         {Math.round(view.zoom * 100)}%
       </button>
     </main>
+  );
+}
+
+interface TransformOverlayProps {
+  box: TransformBox;
+  view: { zoom: number; x: number; y: number };
+}
+
+function TransformOverlay({ box, view }: TransformOverlayProps) {
+  const screen = (point: Point) => ({
+    x: view.x + point.x * view.zoom,
+    y: view.y + point.y * view.zoom,
+  });
+  const corners = CORNERS.map((sign) => screen(cornerOf(box, sign)));
+  const top = screen(cornerOf(box, { x: 0, y: -1 }));
+  const handle = screen(rotateHandle(box, ROTATE_DISTANCE / view.zoom));
+
+  return (
+    <>
+      <polygon points={corners.map((p) => `${p.x},${p.y}`).join(" ")} />
+      <line x1={top.x} y1={top.y} x2={handle.x} y2={handle.y} />
+      {[...corners, handle].map((p, index) => (
+        <circle key={index} cx={p.x} cy={p.y} r={HANDLE_RADIUS} />
+      ))}
+    </>
   );
 }

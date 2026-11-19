@@ -1,11 +1,6 @@
 import type { EpiDocument } from "../core/document";
-import type { MousePos } from "../mouse/mouseEvent";
+import type { MousePos, Point } from "../mouse/mouseEvent";
 import type { BrushSettings } from "./drawSquare";
-
-export interface Point {
-  x: number;
-  y: number;
-}
 
 const dab = new OffscreenCanvas(1, 1);
 const dabCtx = dab.getContext("2d")!;

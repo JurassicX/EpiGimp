@@ -2,7 +2,15 @@ import type { EpiDocument } from "../core/document";
 import type { MousePos } from "../mouse/mouseEvent";
 
 export type BrushType =
-  "brush" | "eraser" | "eyedropper" | "select" | "bucket" | "wand" | "clone";
+  | "brush"
+  | "eraser"
+  | "eyedropper"
+  | "select"
+  | "bucket"
+  | "wand"
+  | "clone"
+  | "move"
+  | "transform";
 
 export const BRUSH_TYPE: Record<BrushType, number> = {
   brush: 1,
@@ -12,6 +20,8 @@ export const BRUSH_TYPE: Record<BrushType, number> = {
   bucket: 5,
   wand: 6,
   clone: 7,
+  move: 8,
+  transform: 9,
 };
 
 export interface BrushSettings {
