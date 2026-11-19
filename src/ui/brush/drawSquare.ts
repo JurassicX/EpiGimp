@@ -1,13 +1,16 @@
 import type { EpiDocument } from "../core/document";
 import type { MousePos } from "../mouse/mouseEvent";
 
-export type BrushType = "brush" | "eraser" | "eyedropper" | "select";
+export type BrushType =
+  "brush" | "eraser" | "eyedropper" | "select" | "bucket" | "wand";
 
 export const BRUSH_TYPE: Record<BrushType, number> = {
   brush: 1,
   eraser: 2,
   eyedropper: 3,
   select: 4,
+  bucket: 5,
+  wand: 6,
 };
 
 export interface BrushSettings {
@@ -15,6 +18,7 @@ export interface BrushSettings {
   hardness: number;
   color: string;
   opacity: number;
+  tolerance: number;
   brushType: BrushType;
 }
 
@@ -23,6 +27,7 @@ export const DEFAULT_BRUSH: BrushSettings = {
   hardness: 1,
   color: "#000000",
   opacity: 1,
+  tolerance: 32,
   brushType: "brush",
 };
 
@@ -40,11 +45,7 @@ export function drawCircle(
   const selection = testDocument.selection;
 
   layer.ctx.save();
-  if (selection) {
-    layer.ctx.beginPath();
-    layer.ctx.rect(selection.x, selection.y, selection.width, selection.height);
-    layer.ctx.clip();
-  }
+  if (selection) layer.ctx.clip(selection.path);
   layer.ctx.filter = `blur(${(1 - brush.hardness) * radius * 0.5}px)`;
   layer.ctx.fillStyle = brush.color;
   layer.ctx.globalAlpha = brush.opacity;

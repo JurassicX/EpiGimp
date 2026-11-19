@@ -10,8 +10,8 @@ import {
   createLayer,
   type BlendMode,
   type EpiDocument,
-  type SelectionRect,
 } from "./core/document";
+import type { Selection } from "./core/selection";
 import {
   DEFAULT_FILTERS,
   toCssFilter,
@@ -241,7 +241,7 @@ export function App() {
     changeDoc({ ...doc, layers });
   }
 
-  function setSelection(selection: SelectionRect | null) {
+  function setSelection(selection: Selection | null) {
     setDoc((previous) => ({ ...previous, selection }));
   }
 

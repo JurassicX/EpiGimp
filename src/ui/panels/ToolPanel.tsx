@@ -83,6 +83,18 @@ export function ToolPanel({
             >
               sélection
             </button>
+            <button
+              className={toolClass("bucket")}
+              onClick={() => onBrushChange({ brushType: "bucket" })}
+            >
+              seau
+            </button>
+            <button
+              className={toolClass("wand")}
+              onClick={() => onBrushChange({ brushType: "wand" })}
+            >
+              baguette
+            </button>
           </div>
           <div className="brush-options">
             <label htmlFor="brush-color">color</label>
@@ -127,6 +139,21 @@ export function ToolPanel({
                 onBrushChange({ opacity: Number(event.target.value) })
               }
             />
+            {(brush.brushType === "bucket" || brush.brushType === "wand") && (
+              <>
+                <label htmlFor="brush-tolerance">tolerance</label>
+                <input
+                  id="brush-tolerance"
+                  type="number"
+                  value={brush.tolerance}
+                  min={0}
+                  max={255}
+                  onChange={(event) =>
+                    onBrushChange({ tolerance: Number(event.target.value) })
+                  }
+                />
+              </>
+            )}
           </div>
         </section>
       )}

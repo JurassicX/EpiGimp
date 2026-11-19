@@ -1,4 +1,5 @@
 import { DEFAULT_FILTERS, type FilterSettings } from "./filters";
+import type { Selection } from "./selection";
 
 export type BlendMode =
   "normal" | "multiply" | "screen" | "overlay" | "difference";
@@ -34,7 +35,7 @@ export interface EpiDocument {
   height: number;
   layers: Layer[];
   activeLayerId: string;
-  selection: SelectionRect | null;
+  selection: Selection | null;
 }
 
 export function createLayer(
