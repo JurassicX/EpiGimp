@@ -1,4 +1,5 @@
 import type { BrushSettings, BrushType } from "../brush/drawSquare";
+import { FONT_FAMILIES } from "../brush/text";
 import { Slider } from "../components/Slider";
 import type { FilterSettings } from "../core/filters";
 import type { PanelVisibility } from "../core/panels";
@@ -115,6 +116,12 @@ export function ToolPanel({
             >
               transformer
             </button>
+            <button
+              className={toolClass("text")}
+              onClick={() => onBrushChange({ brushType: "text" })}
+            >
+              texte
+            </button>
           </div>
           <div className="brush-options">
             <label htmlFor="brush-color">color</label>
@@ -159,6 +166,35 @@ export function ToolPanel({
                 onBrushChange({ opacity: Number(event.target.value) })
               }
             />
+            {brush.brushType === "text" && (
+              <>
+                <label htmlFor="brush-font">font</label>
+                <select
+                  id="brush-font"
+                  value={brush.fontFamily}
+                  onChange={(event) =>
+                    onBrushChange({ fontFamily: event.target.value })
+                  }
+                >
+                  {FONT_FAMILIES.map((family) => (
+                    <option key={family} value={family}>
+                      {family}
+                    </option>
+                  ))}
+                </select>
+                <label htmlFor="brush-font-size">font size</label>
+                <input
+                  id="brush-font-size"
+                  type="number"
+                  value={brush.fontSize}
+                  min={4}
+                  max={500}
+                  onChange={(event) =>
+                    onBrushChange({ fontSize: Number(event.target.value) })
+                  }
+                />
+              </>
+            )}
             {(brush.brushType === "bucket" || brush.brushType === "wand") && (
               <>
                 <label htmlFor="brush-tolerance">tolerance</label>

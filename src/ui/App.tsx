@@ -20,6 +20,8 @@ import {
 import { renderDocument } from "./core/renderer";
 import { DEFAULT_PANELS, type PanelVisibility } from "./core/panels";
 import { DEFAULT_BRUSH, type BrushSettings } from "./brush/drawSquare";
+import { drawText } from "./brush/text";
+import type { Point } from "./mouse/mouseEvent";
 import { NewDocumentDialog } from "./components/NewDocumentDialog";
 import {
   HISTORY_LIMIT,
@@ -100,6 +102,7 @@ export function App() {
       if (!ev.ctrlKey || ev.key.toLowerCase() !== "z") return;
       if (ev.target instanceof HTMLInputElement && ev.target.type === "number")
         return;
+      if (ev.target instanceof HTMLTextAreaElement) return;
 
       ev.preventDefault();
       if (ev.shiftKey) redo();
@@ -194,6 +197,17 @@ export function App() {
     changeDoc({ ...doc, layers: [...doc.layers, layer] });
   }
 
+  function addText(text: string, pos: Point) {
+    const name = text.split("\n")[0].trim().slice(0, 24) || "Text";
+    const layer = createLayer(doc.width, doc.height, name);
+    drawText(layer.ctx, text, pos, brush);
+    changeDoc({
+      ...doc,
+      layers: [...doc.layers, layer],
+      activeLayerId: layer.id,
+    });
+  }
+
   function deleteLayer(id: string) {
     if (doc.layers.length === 1) return;
 
@@ -282,6 +296,7 @@ export function App() {
         onBrushChange={updateBrush}
         onSelectionChange={setSelection}
         onPixelsChange={recordPixels}
+        onAddText={addText}
       />
       {panels.image && (
         <LayersPanel

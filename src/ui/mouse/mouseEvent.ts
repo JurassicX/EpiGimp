@@ -7,15 +7,24 @@ export interface MousePos extends Point {
   pressure: number;
 }
 
-export function getMousePos(
+export function getCanvasPoint(
   canvas: HTMLCanvasElement,
-  ev: React.PointerEvent,
-): MousePos {
+  ev: React.MouseEvent,
+): Point {
   const rect = canvas.getBoundingClientRect();
 
   return {
     x: (ev.clientX - rect.left) * (canvas.width / rect.width),
     y: (ev.clientY - rect.top) * (canvas.height / rect.height),
+  };
+}
+
+export function getMousePos(
+  canvas: HTMLCanvasElement,
+  ev: React.PointerEvent,
+): MousePos {
+  return {
+    ...getCanvasPoint(canvas, ev),
     pressure: ev.pointerType === "pen" && ev.pressure > 0 ? ev.pressure : 1,
   };
 }

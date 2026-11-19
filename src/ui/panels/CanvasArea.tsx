@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { renderDocument } from "../core/renderer";
-import { getMousePos, type MousePos, type Point } from "../mouse/mouseEvent";
+import {
+  getCanvasPoint,
+  getMousePos,
+  type MousePos,
+  type Point,
+} from "../mouse/mouseEvent";
 import "./CanvasArea.css";
 import {
   drawCircle,
@@ -13,6 +18,7 @@ import { captureChange, copyCanvas, type PixelChange } from "../core/history";
 import { rectSelection, type Selection } from "../core/selection";
 import { fillAt, selectAt } from "../brush/fill";
 import { drawClone } from "../brush/clone";
+import { LINE_HEIGHT } from "../brush/text";
 import {
   CORNERS,
   boxFromBounds,
@@ -45,6 +51,7 @@ interface CanvasAreaProps {
   onBrushChange: (changes: Partial<BrushSettings>) => void;
   onSelectionChange: (selection: Selection | null) => void;
   onPixelsChange: (pixels: PixelChange) => void;
+  onAddText: (text: string, pos: Point) => void;
 }
 
 export function CanvasArea({
@@ -53,6 +60,7 @@ export function CanvasArea({
   onBrushChange,
   onSelectionChange,
   onPixelsChange,
+  onAddText,
 }: CanvasAreaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stroke = useRef<MousePos[] | null>(null);
@@ -70,6 +78,8 @@ export function CanvasArea({
   const transformDrag = useRef<TransformDrag | null>(null);
   const boxRef = useRef<TransformBox | null>(null);
   const [box, setBox] = useState<TransformBox | null>(null);
+  const textInput = useRef<HTMLTextAreaElement>(null);
+  const [textEdit, setTextEdit] = useState<Point | null>(null);
   const [view, setView] = useState({ zoom: 1, x: 0, y: 0 });
 
   function fitToView() {
@@ -124,6 +134,7 @@ export function CanvasArea({
     function handleKey(ev: KeyboardEvent) {
       if (ev.code !== "Space") return;
       if (ev.target instanceof HTMLInputElement) return;
+      if (ev.target instanceof HTMLTextAreaElement) return;
       ev.preventDefault();
       spaceHeld.current = ev.type === "keydown";
     }
@@ -386,12 +397,26 @@ export function CanvasArea({
     });
   }
 
+  function handleClick(ev: React.MouseEvent<HTMLCanvasElement>) {
+    if (brush.brushType !== "text" || spaceHeld.current) return;
+    setTextEdit(getCanvasPoint(ev.currentTarget, ev));
+  }
+
+  function finishText() {
+    const input = textInput.current;
+    if (!input || !textEdit) return;
+
+    textInput.current = null;
+    if (input.value.trim()) onAddText(input.value, textEdit);
+    setTextEdit(null);
+  }
+
   function handlePointerDown(ev: React.PointerEvent<HTMLCanvasElement>) {
     if (stroke.current || isPanStart(ev)) return;
 
     const pos = getMousePos(ev.currentTarget, ev);
 
-    if (brush.brushType === "transform") return;
+    if (brush.brushType === "transform" || brush.brushType === "text") return;
 
     if (brush.brushType === "move") {
       const layer = activeLayer();
@@ -525,7 +550,27 @@ export function CanvasArea({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
+        onClick={handleClick}
       />
+      {textEdit && (
+        <textarea
+          ref={textInput}
+          className="text-input"
+          autoFocus
+          spellCheck={false}
+          style={{
+            left: view.x + textEdit.x * view.zoom,
+            top: view.y + textEdit.y * view.zoom,
+            font: `${brush.fontSize * view.zoom}px ${brush.fontFamily}`,
+            lineHeight: LINE_HEIGHT,
+            color: brush.color,
+          }}
+          onBlur={finishText}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") finishText();
+          }}
+        />
+      )}
       {doc.selection && (
         <svg
           className="selection"

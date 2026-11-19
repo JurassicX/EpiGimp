@@ -10,7 +10,8 @@ export type BrushType =
   | "wand"
   | "clone"
   | "move"
-  | "transform";
+  | "transform"
+  | "text";
 
 export const BRUSH_TYPE: Record<BrushType, number> = {
   brush: 1,
@@ -22,6 +23,7 @@ export const BRUSH_TYPE: Record<BrushType, number> = {
   clone: 7,
   move: 8,
   transform: 9,
+  text: 10,
 };
 
 export interface BrushSettings {
@@ -30,6 +32,8 @@ export interface BrushSettings {
   color: string;
   opacity: number;
   tolerance: number;
+  fontFamily: string;
+  fontSize: number;
   brushType: BrushType;
 }
 
@@ -39,6 +43,8 @@ export const DEFAULT_BRUSH: BrushSettings = {
   color: "#000000",
   opacity: 1,
   tolerance: 32,
+  fontFamily: "sans-serif",
+  fontSize: 48,
   brushType: "brush",
 };
 

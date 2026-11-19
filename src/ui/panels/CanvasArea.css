@@ -80,3 +80,17 @@
   stroke: var(--accent);
   stroke-width: 1.5;
 }
+
+.text-input {
+  position: absolute;
+  min-width: 1ch;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  white-space: pre;
+  field-sizing: content;
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: 1px dashed var(--accent);
+}
