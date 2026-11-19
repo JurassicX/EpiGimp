@@ -47,3 +47,15 @@
     stroke-dashoffset: -10;
   }
 }
+
+.clone-source {
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  translate: -50% -50%;
+  pointer-events: none;
+  background:
+    linear-gradient(#fff, #fff) center / 1px 100% no-repeat,
+    linear-gradient(#fff, #fff) center / 100% 1px no-repeat;
+  filter: drop-shadow(0 0 1px #000);
+}
