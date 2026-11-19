@@ -10,6 +10,8 @@ import {
 import { hexColor } from "../core/hexColor";
 import type { EpiDocument, SelectionRect } from "../core/document";
 import { captureChange, copyCanvas, type PixelChange } from "../core/history";
+import { rectSelection, type Selection } from "../core/selection";
+import { fillAt, selectAt } from "../brush/fill";
 
 const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 32;
@@ -18,7 +20,7 @@ interface CanvasAreaProps {
   doc: EpiDocument;
   brush: BrushSettings;
   onBrushChange: (changes: Partial<BrushSettings>) => void;
-  onSelectionChange: (selection: SelectionRect | null) => void;
+  onSelectionChange: (selection: Selection | null) => void;
   onPixelsChange: (pixels: PixelChange) => void;
 }
 
@@ -170,13 +172,25 @@ export function CanvasArea({
     renderDocument(ctx, doc);
   }, [doc]);
 
+  function redraw() {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (ctx) renderDocument(ctx, doc);
+  }
+
   function paintAt(pos: MousePos) {
     drawCircle(pos, doc, brush);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    renderDocument(ctx, doc);
+    redraw();
+  }
+
+  function fillFrom(pos: MousePos) {
+    const layer = doc.layers.find((l) => l.id === doc.activeLayerId);
+    if (!layer) return;
+
+    const snapshot = copyCanvas(layer.canvas);
+    const region = fillAt(pos, doc, brush);
+    if (!region) return;
+    onPixelsChange(captureChange(layer.ctx, snapshot, region));
+    redraw();
   }
 
   function getColorFromCoord(pos: MousePos) {
@@ -206,6 +220,16 @@ export function CanvasArea({
       return;
     }
 
+    if (brush.brushType === "wand") {
+      onSelectionChange(selectAt(pos, doc, brush));
+      return;
+    }
+
+    if (brush.brushType === "bucket") {
+      fillFrom(pos);
+      return;
+    }
+
     if (brush.brushType === "eyedropper") {
       getColorFromCoord(pos);
       return;
@@ -222,7 +246,9 @@ export function CanvasArea({
         selectionStart.current,
         getMousePos(ev.currentTarget, ev),
       );
-      onSelectionChange(rect.width > 0 && rect.height > 0 ? rect : null);
+      onSelectionChange(
+        rect.width > 0 && rect.height > 0 ? rectSelection(rect) : null,
+      );
       return;
     }
 
@@ -277,6 +303,8 @@ export function CanvasArea({
       {doc.selection && (
         <svg
           className="selection"
+          viewBox={`${doc.selection.x} ${doc.selection.y} ${doc.selection.width} ${doc.selection.height}`}
+          preserveAspectRatio="none"
           style={{
             left: view.x + doc.selection.x * view.zoom,
             top: view.y + doc.selection.y * view.zoom,
@@ -284,8 +312,8 @@ export function CanvasArea({
             height: doc.selection.height * view.zoom,
           }}
         >
-          <rect className="selection-outline" width="100%" height="100%" />
-          <rect className="selection-ants" width="100%" height="100%" />
+          <path className="selection-outline" d={doc.selection.outline} />
+          <path className="selection-ants" d={doc.selection.outline} />
         </svg>
       )}
       <button className="zoom-label" title="fit to window" onClick={fitToView}>
