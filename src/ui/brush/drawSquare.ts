@@ -1,4 +1,4 @@
-import type { EpiDocument } from "../core/document";
+import { activeTarget, type EpiDocument } from "../core/document";
 import type { MousePos } from "../mouse/mouseEvent";
 
 export type BrushType =
@@ -53,25 +53,23 @@ export function drawCircle(
   testDocument: EpiDocument,
   brush: BrushSettings,
 ) {
-  const layer = testDocument.layers.find(
-    (l) => l.id === testDocument.activeLayerId,
-  );
-  if (!layer) return;
+  const target = activeTarget(testDocument);
+  if (!target) return;
 
   const radius = (brush.size / 2) * pos.pressure;
   const selection = testDocument.selection;
 
-  layer.ctx.save();
-  if (selection) layer.ctx.clip(selection.path);
-  layer.ctx.filter = `blur(${(1 - brush.hardness) * radius * 0.5}px)`;
-  layer.ctx.fillStyle = brush.color;
-  layer.ctx.globalAlpha = brush.opacity;
-  layer.ctx.beginPath();
-  layer.ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+  target.ctx.save();
+  if (selection) target.ctx.clip(selection.path);
+  target.ctx.filter = `blur(${(1 - brush.hardness) * radius * 0.5}px)`;
+  target.ctx.fillStyle = brush.color;
+  target.ctx.globalAlpha = brush.opacity;
+  target.ctx.beginPath();
+  target.ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
   if (brush.brushType === "eraser")
-    layer.ctx.globalCompositeOperation = "destination-out";
-  layer.ctx.fill();
-  layer.ctx.restore();
+    target.ctx.globalCompositeOperation = "destination-out";
+  target.ctx.fill();
+  target.ctx.restore();
 }
 
 export function drawStroke(

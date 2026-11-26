@@ -13,7 +13,11 @@ import {
   type BrushSettings,
 } from "../brush/drawSquare";
 import { hexColor } from "../core/hexColor";
-import type { EpiDocument, SelectionRect } from "../core/document";
+import {
+  activeTarget,
+  type EpiDocument,
+  type SelectionRect,
+} from "../core/document";
 import { captureChange, copyCanvas, type PixelChange } from "../core/history";
 import { rectSelection, type Selection } from "../core/selection";
 import { fillAt, selectAt } from "../brush/fill";
@@ -184,41 +188,39 @@ export function CanvasArea({
     return ev.button === 1 || spaceHeld.current;
   }
 
-  function activeLayer() {
-    return doc.layers.find((l) => l.id === doc.activeLayerId);
-  }
-
   function updateBox(next: TransformBox | null) {
     boxRef.current = next;
     setBox(next);
   }
 
   function startTransform() {
-    const layer = activeLayer();
-    const bounds = layer ? contentBounds(layer.canvas) : null;
+    const target = activeTarget(doc);
+    const bounds = target ? contentBounds(target.canvas) : null;
 
-    transformSource.current = layer ? copyCanvas(layer.canvas) : null;
+    transformSource.current = target ? copyCanvas(target.canvas) : null;
     transformBounds.current = bounds;
     updateBox(bounds ? boxFromBounds(bounds) : null);
   }
 
   function finishTransform(apply: boolean) {
-    const layer = activeLayer();
+    const target = activeTarget(doc);
     const source = transformSource.current;
     const bounds = transformBounds.current;
     const current = boxRef.current;
-    if (!layer || !source || !bounds || !current) return;
+    if (!target || !source || !bounds || !current) return;
     if (isSameBox(current, boxFromBounds(bounds))) return;
 
     if (apply) {
       const region = changedRegion(current, bounds, doc.width, doc.height);
-      onPixelsChange(captureChange(layer.ctx, source, region));
+      onPixelsChange(captureChange(target.ctx, source, region));
     } else {
-      layer.ctx.clearRect(0, 0, doc.width, doc.height);
-      layer.ctx.drawImage(source, 0, 0);
+      target.ctx.clearRect(0, 0, doc.width, doc.height);
+      target.ctx.drawImage(source, 0, 0);
       redraw();
     }
   }
+
+  const targetCanvas = activeTarget(doc)?.canvas;
 
   useEffect(() => {
     if (brush.brushType !== "transform") return;
@@ -227,7 +229,7 @@ export function CanvasArea({
       finishTransform(true);
       updateBox(null);
     };
-  }, [brush.brushType, doc.activeLayerId]);
+  }, [brush.brushType, targetCanvas]);
 
   useEffect(() => {
     if (brush.brushType !== "transform") return;
@@ -314,13 +316,13 @@ export function CanvasArea({
 
   function handleAreaPointerMove(ev: React.PointerEvent<HTMLElement>) {
     const drag = transformDrag.current;
-    const layer = activeLayer();
+    const target = activeTarget(doc);
     const canvas = canvasRef.current;
 
-    if (drag && layer && canvas && transformSource.current) {
+    if (drag && target && canvas && transformSource.current) {
       const next = draggedBox(drag, getMousePos(canvas, ev), ev.shiftKey);
       drawTransformed(
-        layer.ctx,
+        target.ctx,
         transformSource.current,
         transformBounds.current!,
         next,
@@ -371,13 +373,13 @@ export function CanvasArea({
   }
 
   function fillFrom(pos: MousePos) {
-    const layer = doc.layers.find((l) => l.id === doc.activeLayerId);
-    if (!layer) return;
+    const target = activeTarget(doc);
+    if (!target) return;
 
-    const snapshot = copyCanvas(layer.canvas);
+    const snapshot = copyCanvas(target.canvas);
     const region = fillAt(pos, doc, brush);
     if (!region) return;
-    onPixelsChange(captureChange(layer.ctx, snapshot, region));
+    onPixelsChange(captureChange(target.ctx, snapshot, region));
     redraw();
   }
 
@@ -419,9 +421,9 @@ export function CanvasArea({
     if (brush.brushType === "transform" || brush.brushType === "text") return;
 
     if (brush.brushType === "move") {
-      const layer = activeLayer();
-      if (!layer) return;
-      strokeSnapshot.current = copyCanvas(layer.canvas);
+      const target = activeTarget(doc);
+      if (!target) return;
+      strokeSnapshot.current = copyCanvas(target.canvas);
       moveStart.current = pos;
       return;
     }
@@ -460,19 +462,19 @@ export function CanvasArea({
       };
     }
 
-    const layer = doc.layers.find((l) => l.id === doc.activeLayerId);
-    strokeSnapshot.current = layer ? copyCanvas(layer.canvas) : null;
+    const target = activeTarget(doc);
+    strokeSnapshot.current = target ? copyCanvas(target.canvas) : null;
     stroke.current = [pos];
     paintAt(pos);
   }
 
   function handlePointerMove(ev: React.PointerEvent<HTMLCanvasElement>) {
-    const layer = activeLayer();
+    const target = activeTarget(doc);
 
-    if (moveStart.current && strokeSnapshot.current && layer) {
+    if (moveStart.current && strokeSnapshot.current && target) {
       const pos = getMousePos(ev.currentTarget, ev);
-      layer.ctx.clearRect(0, 0, doc.width, doc.height);
-      layer.ctx.drawImage(
+      target.ctx.clearRect(0, 0, doc.width, doc.height);
+      target.ctx.drawImage(
         strokeSnapshot.current,
         Math.round(pos.x - moveStart.current.x),
         Math.round(pos.y - moveStart.current.y),
@@ -504,18 +506,18 @@ export function CanvasArea({
   }
 
   function handlePointerUp() {
-    const layer = doc.layers.find((l) => l.id === doc.activeLayerId);
+    const target = activeTarget(doc);
 
-    if (stroke.current && strokeSnapshot.current && layer) {
+    if (stroke.current && strokeSnapshot.current && target) {
       const region = strokeRegion(stroke.current, brush.size * 1.5 + 2);
       if (region)
         onPixelsChange(
-          captureChange(layer.ctx, strokeSnapshot.current, region),
+          captureChange(target.ctx, strokeSnapshot.current, region),
         );
     }
-    if (moveStart.current && strokeSnapshot.current && layer) {
+    if (moveStart.current && strokeSnapshot.current && target) {
       const area = { x: 0, y: 0, width: doc.width, height: doc.height };
-      onPixelsChange(captureChange(layer.ctx, strokeSnapshot.current, area));
+      onPixelsChange(captureChange(target.ctx, strokeSnapshot.current, area));
     }
 
     if (cloneOffset.current) setCloneMark(cloneSource.current);

@@ -1,4 +1,8 @@
-import type { EpiDocument, SelectionRect } from "../core/document";
+import {
+  activeTarget,
+  type EpiDocument,
+  type SelectionRect,
+} from "../core/document";
 import { floodFill } from "../core/floodFill";
 import { hexToRgb } from "../core/hexColor";
 import { maskBounds, maskSelection, type Selection } from "../core/selection";
@@ -6,14 +10,14 @@ import type { MousePos } from "../mouse/mouseEvent";
 import type { BrushSettings } from "./drawSquare";
 
 function areaAt(pos: MousePos, doc: EpiDocument, tolerance: number) {
-  const layer = doc.layers.find((l) => l.id === doc.activeLayerId);
+  const target = activeTarget(doc);
   const x = Math.floor(pos.x);
   const y = Math.floor(pos.y);
-  if (!layer || x < 0 || y < 0 || x >= doc.width || y >= doc.height)
+  if (!target || x < 0 || y < 0 || x >= doc.width || y >= doc.height)
     return null;
 
-  const image = layer.ctx.getImageData(0, 0, doc.width, doc.height);
-  return { layer, mask: floodFill(image, x, y, tolerance) };
+  const image = target.ctx.getImageData(0, 0, doc.width, doc.height);
+  return { target, mask: floodFill(image, x, y, tolerance) };
 }
 
 export function fillAt(
@@ -40,7 +44,7 @@ export function fillAt(
   const stamp = new OffscreenCanvas(bounds.width, bounds.height);
   stamp.getContext("2d")?.putImageData(patch, 0, 0);
 
-  const { ctx } = area.layer;
+  const { ctx } = area.target;
   ctx.save();
   if (doc.selection) ctx.clip(doc.selection.path);
   ctx.globalAlpha = brush.opacity;
