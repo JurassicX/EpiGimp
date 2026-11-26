@@ -1,4 +1,4 @@
-import type { EpiDocument } from "../core/document";
+import { activeTarget, type EpiDocument } from "../core/document";
 import type { MousePos, Point } from "../mouse/mouseEvent";
 import type { BrushSettings } from "./drawSquare";
 
@@ -12,8 +12,8 @@ export function drawClone(
   source: OffscreenCanvas,
   offset: Point,
 ) {
-  const layer = doc.layers.find((l) => l.id === doc.activeLayerId);
-  if (!layer) return;
+  const target = activeTarget(doc);
+  if (!target) return;
 
   const radius = (brush.size / 2) * pos.pressure;
   const side = Math.ceil(radius * 4) + 2;
@@ -31,9 +31,9 @@ export function drawClone(
   dabCtx.drawImage(source, -(left + offset.x), -(top + offset.y));
   dabCtx.globalCompositeOperation = "source-over";
 
-  layer.ctx.save();
-  if (doc.selection) layer.ctx.clip(doc.selection.path);
-  layer.ctx.globalAlpha = brush.opacity;
-  layer.ctx.drawImage(dab, left, top);
-  layer.ctx.restore();
+  target.ctx.save();
+  if (doc.selection) target.ctx.clip(doc.selection.path);
+  target.ctx.globalAlpha = brush.opacity;
+  target.ctx.drawImage(dab, left, top);
+  target.ctx.restore();
 }

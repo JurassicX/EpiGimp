@@ -8,6 +8,7 @@ import { createTestDocument } from "./core/createTestDoc";
 import {
   createDocument,
   createLayer,
+  createMask,
   type BlendMode,
   type EpiDocument,
 } from "./core/document";
@@ -255,6 +256,26 @@ export function App() {
     changeDoc({ ...doc, layers });
   }
 
+  function toggleMask(id: string) {
+    const layers = doc.layers.map((layer) =>
+      layer.id !== id
+        ? layer
+        : {
+            ...layer,
+            mask: layer.mask ? null : createMask(doc.width, doc.height),
+            editingMask: !layer.mask,
+          },
+    );
+    changeDoc({ ...doc, layers, activeLayerId: id });
+  }
+
+  function editMask(id: string, editingMask: boolean) {
+    const layers = doc.layers.map((layer) =>
+      layer.id === id ? { ...layer, editingMask } : layer,
+    );
+    setDoc({ ...doc, layers, activeLayerId: id });
+  }
+
   function setSelection(selection: Selection | null) {
     setDoc((previous) => ({ ...previous, selection }));
   }
@@ -307,6 +328,8 @@ export function App() {
           onShowSwitchLayer={showSwitchLayer}
           onMoveLayer={moveLayer}
           onBlendModeChange={setBlendMode}
+          onToggleMask={toggleMask}
+          onEditMask={editMask}
         />
       )}
       {showNewDialog && (

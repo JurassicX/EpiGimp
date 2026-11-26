@@ -2,7 +2,12 @@ import { useEffect, useRef } from "react";
 import type { Layer } from "../core/document";
 import { toCssFilter } from "../core/filters";
 
-export function LayerThumbnail({ layer }: { layer: Layer }) {
+interface LayerThumbnailProps {
+  layer: Layer;
+  showMask?: boolean;
+}
+
+export function LayerThumbnail({ layer, showMask }: LayerThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -11,9 +16,11 @@ export function LayerThumbnail({ layer }: { layer: Layer }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.filter = toCssFilter(layer.filters);
-    ctx.drawImage(layer.canvas, 0, 0, 64, 48);
-  }, [layer]);
+    const source = showMask && layer.mask ? layer.mask : layer;
+    ctx.clearRect(0, 0, 64, 48);
+    ctx.filter = showMask ? "none" : toCssFilter(layer.filters);
+    ctx.drawImage(source.canvas, 0, 0, 64, 48);
+  }, [layer, showMask]);
 
   return (
     <canvas className="checkerboard" ref={canvasRef} width={64} height={48} />

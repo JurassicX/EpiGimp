@@ -1,5 +1,6 @@
 import { BLEND_MODES, type EpiDocument } from "./document";
 import { toCssFilter } from "./filters";
+import { applyMask } from "./mask";
 
 export function renderDocument(
   ctx: CanvasRenderingContext2D,
@@ -13,7 +14,7 @@ export function renderDocument(
     ctx.globalAlpha = layer.opacity;
     ctx.globalCompositeOperation = BLEND_MODES[layer.blendMode];
     ctx.filter = toCssFilter(layer.filters);
-    ctx.drawImage(layer.canvas, 0, 0);
+    ctx.drawImage(applyMask(layer), 0, 0);
   }
 
   ctx.globalAlpha = 1;
