@@ -129,10 +129,12 @@ export function App() {
 
     const copy = copyCanvas(active.canvas);
 
+    active.ctx.save();
+    if (doc.selection) active.ctx.clip(doc.selection.path);
     active.ctx.clearRect(0, 0, doc.width, doc.height);
     active.ctx.filter = toCssFilter(active.filters);
     active.ctx.drawImage(copy, 0, 0);
-    active.ctx.filter = "none";
+    active.ctx.restore();
 
     const layers = doc.layers.map((layer) =>
       layer.id === active.id
