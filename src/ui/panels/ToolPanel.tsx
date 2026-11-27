@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { BrushSettings, BrushType } from "../brush/drawSquare";
+import { EXPORT_FORMATS, type ExportFormat } from "../core/exportFormat";
 import { FONT_FAMILIES } from "../brush/text";
 import { SELECT_SHAPES, type SelectShape } from "../core/selection";
 import { Slider } from "../components/Slider";
@@ -14,7 +16,7 @@ interface ToolPanelProps {
   onFilterChange: (key: keyof FilterSettings, value: number) => void;
   onApplyFilters: () => void;
   onOpenFile: (file: File) => void;
-  onSaveImage: () => void;
+  onSaveImage: (format: ExportFormat, quality: number) => void;
   onNewDocument: () => void;
 }
 
@@ -29,6 +31,9 @@ export function ToolPanel({
   onSaveImage,
   onNewDocument,
 }: ToolPanelProps) {
+  const [format, setFormat] = useState<ExportFormat>("png");
+  const [quality, setQuality] = useState(90);
+
   function toolClass(type: BrushType) {
     return brush.brushType === type ? "active" : "";
   }
@@ -52,7 +57,38 @@ export function ToolPanel({
                 }}
               />
             </label>
-            <button onClick={() => onSaveImage()}>sauvegarder</button>
+            <button onClick={() => onSaveImage(format, quality)}>
+              sauvegarder
+            </button>
+          </div>
+          <div className="brush-options">
+            <label htmlFor="export-format">format</label>
+            <select
+              id="export-format"
+              value={format}
+              onChange={(event) =>
+                setFormat(event.target.value as ExportFormat)
+              }
+            >
+              {EXPORT_FORMATS.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            {format !== "png" && (
+              <>
+                <label htmlFor="export-quality">quality</label>
+                <input
+                  id="export-quality"
+                  type="number"
+                  value={quality}
+                  min={1}
+                  max={100}
+                  onChange={(event) => setQuality(Number(event.target.value))}
+                />
+              </>
+            )}
           </div>
         </section>
       )}

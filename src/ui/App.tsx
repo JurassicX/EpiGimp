@@ -23,6 +23,7 @@ import { DEFAULT_PANELS, type PanelVisibility } from "./core/panels";
 import { DEFAULT_BRUSH, type BrushSettings } from "./brush/drawSquare";
 import { drawText } from "./brush/text";
 import type { Point } from "./mouse/mouseEvent";
+import { FILE_EXTENSIONS, type ExportFormat } from "./core/exportFormat";
 import { NewDocumentDialog } from "./components/NewDocumentDialog";
 import {
   HISTORY_LIMIT,
@@ -164,7 +165,7 @@ export function App() {
     loaded.src = url;
   }, []);
 
-  function saveImage() {
+  function saveImage(format: ExportFormat, quality: number) {
     const downloadCanvas = document.createElement("canvas");
     if (!downloadCanvas) return;
     const donwloadCanvasCtx = downloadCanvas.getContext("2d");
@@ -173,17 +174,26 @@ export function App() {
     downloadCanvas.width = doc.width;
     downloadCanvas.height = doc.height;
     renderDocument(donwloadCanvasCtx, doc);
+    if (format === "jpeg") {
+      donwloadCanvasCtx.globalCompositeOperation = "destination-over";
+      donwloadCanvasCtx.fillStyle = "#ffffff";
+      donwloadCanvasCtx.fillRect(0, 0, doc.width, doc.height);
+    }
 
-    downloadCanvas.toBlob((blob) => {
-      const newA = document.createElement("a");
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
+    downloadCanvas.toBlob(
+      (blob) => {
+        const newA = document.createElement("a");
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
 
-      newA.href = url;
-      newA.download = "Epigimp.png";
-      newA.click();
-      URL.revokeObjectURL(url);
-    });
+        newA.href = url;
+        newA.download = `Epigimp.${FILE_EXTENSIONS[format]}`;
+        newA.click();
+        URL.revokeObjectURL(url);
+      },
+      `image/${format}`,
+      quality / 100,
+    );
   }
 
   function newDocument(width: number, height: number, color: string) {
