@@ -1,5 +1,6 @@
 import type { BrushSettings, BrushType } from "../brush/drawSquare";
 import { FONT_FAMILIES } from "../brush/text";
+import { SELECT_SHAPES, type SelectShape } from "../core/selection";
 import { Slider } from "../components/Slider";
 import type { FilterSettings } from "../core/filters";
 import type { PanelVisibility } from "../core/panels";
@@ -166,6 +167,26 @@ export function ToolPanel({
                 onBrushChange({ opacity: Number(event.target.value) })
               }
             />
+            {brush.brushType === "select" && (
+              <>
+                <label htmlFor="brush-select-shape">shape</label>
+                <select
+                  id="brush-select-shape"
+                  value={brush.selectShape}
+                  onChange={(event) =>
+                    onBrushChange({
+                      selectShape: event.target.value as SelectShape,
+                    })
+                  }
+                >
+                  {SELECT_SHAPES.map((shape) => (
+                    <option key={shape} value={shape}>
+                      {shape}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
             {brush.brushType === "text" && (
               <>
                 <label htmlFor="brush-font">font</label>

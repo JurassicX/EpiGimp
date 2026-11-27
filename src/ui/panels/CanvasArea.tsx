@@ -19,7 +19,12 @@ import {
   type SelectionRect,
 } from "../core/document";
 import { captureChange, copyCanvas, type PixelChange } from "../core/history";
-import { rectSelection, type Selection } from "../core/selection";
+import {
+  ellipseSelection,
+  lassoSelection,
+  rectSelection,
+  type Selection,
+} from "../core/selection";
 import { fillAt, selectAt } from "../brush/fill";
 import { drawClone } from "../brush/clone";
 import { LINE_HEIGHT } from "../brush/text";
@@ -71,7 +76,7 @@ export function CanvasArea({
   const areaRef = useRef<HTMLElement>(null);
   const spaceHeld = useRef(false);
   const pan = useRef<{ x: number; y: number } | null>(null);
-  const selectionStart = useRef<MousePos | null>(null);
+  const selectionPoints = useRef<Point[] | null>(null);
   const strokeSnapshot = useRef<OffscreenCanvas | null>(null);
   const cloneSource = useRef<Point | null>(null);
   const cloneOffset = useRef<Point | null>(null);
@@ -162,12 +167,30 @@ export function CanvasArea({
     return () => window.removeEventListener("keydown", handleDeselect);
   }, [onSelectionChange]);
 
-  function rectBetween(a: MousePos, b: MousePos): SelectionRect {
+  function rectBetween(a: Point, b: Point): SelectionRect {
     const left = Math.round(Math.max(0, Math.min(a.x, b.x)));
     const top = Math.round(Math.max(0, Math.min(a.y, b.y)));
     const right = Math.round(Math.min(doc.width, Math.max(a.x, b.x)));
     const bottom = Math.round(Math.min(doc.height, Math.max(a.y, b.y)));
     return { x: left, y: top, width: right - left, height: bottom - top };
+  }
+
+  function clampToDoc(point: Point): Point {
+    return {
+      x: Math.round(Math.min(doc.width, Math.max(0, point.x))),
+      y: Math.round(Math.min(doc.height, Math.max(0, point.y))),
+    };
+  }
+
+  function shapeSelection(points: Point[]): Selection | null {
+    if (brush.selectShape === "lasso")
+      return lassoSelection(points.map(clampToDoc));
+
+    const rect = rectBetween(points[0], points[points.length - 1]);
+    if (rect.width === 0 || rect.height === 0) return null;
+    return brush.selectShape === "ellipse"
+      ? ellipseSelection(rect)
+      : rectSelection(rect);
   }
 
   function strokeRegion(
@@ -429,7 +452,7 @@ export function CanvasArea({
     }
 
     if (brush.brushType === "select") {
-      selectionStart.current = pos;
+      selectionPoints.current = [pos];
       onSelectionChange(null);
       return;
     }
@@ -483,14 +506,9 @@ export function CanvasArea({
       return;
     }
 
-    if (selectionStart.current) {
-      const rect = rectBetween(
-        selectionStart.current,
-        getMousePos(ev.currentTarget, ev),
-      );
-      onSelectionChange(
-        rect.width > 0 && rect.height > 0 ? rectSelection(rect) : null,
-      );
+    if (selectionPoints.current) {
+      selectionPoints.current.push(getMousePos(ev.currentTarget, ev));
+      onSelectionChange(shapeSelection(selectionPoints.current));
       return;
     }
 
@@ -525,7 +543,7 @@ export function CanvasArea({
     strokeSnapshot.current = null;
     cloneOffset.current = null;
     moveStart.current = null;
-    selectionStart.current = null;
+    selectionPoints.current = null;
   }
 
   return (

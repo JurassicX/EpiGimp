@@ -1,4 +1,9 @@
 import type { SelectionRect } from "./document";
+import type { Point } from "../mouse/mouseEvent";
+
+export type SelectShape = "rectangle" | "ellipse" | "lasso";
+
+export const SELECT_SHAPES: SelectShape[] = ["rectangle", "ellipse", "lasso"];
 
 export interface Selection extends SelectionRect {
   path: Path2D;
@@ -15,6 +20,38 @@ export function rectSelection(rect: SelectionRect): Selection {
     path,
     outline: `M${x} ${y}h${width}v${height}h${-width}Z`,
   };
+}
+
+export function ellipseSelection(rect: SelectionRect): Selection {
+  const rx = rect.width / 2;
+  const ry = rect.height / 2;
+  const cx = rect.x + rx;
+  const cy = rect.y + ry;
+  const path = new Path2D();
+  path.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+
+  return {
+    ...rect,
+    path,
+    outline: `M${cx - rx} ${cy}A${rx} ${ry} 0 1 0 ${cx + rx} ${cy}A${rx} ${ry} 0 1 0 ${cx - rx} ${cy}Z`,
+  };
+}
+
+export function lassoSelection(points: Point[]): Selection | null {
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  const width = Math.max(...xs) - x;
+  const height = Math.max(...ys) - y;
+  if (points.length < 3 || width < 1 || height < 1) return null;
+
+  const path = new Path2D();
+  points.forEach((point) => path.lineTo(point.x, point.y));
+  path.closePath();
+  const outline = points.map((point) => `${point.x} ${point.y}`).join("L");
+
+  return { x, y, width, height, path, outline: `M${outline}Z` };
 }
 
 export function maskBounds(

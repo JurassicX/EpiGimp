@@ -1,5 +1,6 @@
 import { activeTarget, type EpiDocument } from "../core/document";
 import type { MousePos } from "../mouse/mouseEvent";
+import type { SelectShape } from "../core/selection";
 
 export type BrushType =
   | "brush"
@@ -34,6 +35,7 @@ export interface BrushSettings {
   tolerance: number;
   fontFamily: string;
   fontSize: number;
+  selectShape: SelectShape;
   brushType: BrushType;
 }
 
@@ -45,6 +47,7 @@ export const DEFAULT_BRUSH: BrushSettings = {
   tolerance: 32,
   fontFamily: "sans-serif",
   fontSize: 48,
+  selectShape: "rectangle",
   brushType: "brush",
 };
 
